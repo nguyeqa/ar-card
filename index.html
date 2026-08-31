@@ -122,18 +122,41 @@
       <a-plane width="0.006" height="0.588" position="-0.507 0 0" color="#C08B45" material="shader: flat"></a-plane>
     </a-entity>
 
-    <!-- name plate above the card -->
-    <a-entity id="plate" position="0 0.30 0.02" scale="0.001 0.001 0.001">
-      <a-plane width="0.86" height="0.20" color="#0B0C0E" opacity="0.92" material="shader: flat"></a-plane>
-      <a-text value="QUAN NGUYEN" align="center" anchor="center" color="#F2F0EA" width="1.5" position="0 0.035 0.001"></a-text>
-      <a-text value="VEHICLE CONTROL LEAD  /  BEARCATS ELECTRIC RACING" align="center" anchor="center"
-              color="#C08B45" width="0.95" position="0 -0.035 0.001"></a-text>
+    <!-- info screen, floating clear above the card -->
+    <a-entity id="screen" position="0 0.625 0.06" scale="0.001 0.001 0.001">
+      <a-plane width="1.04" height="0.63" color="#0B0C0E" opacity="0.93" material="shader: flat"></a-plane>
+      <a-plane width="1.04" height="0.005" position="0  0.3155 0.001" color="#C08B45" material="shader: flat"></a-plane>
+      <a-plane width="1.04" height="0.005" position="0 -0.3155 0.001" color="#C08B45" material="shader: flat"></a-plane>
+
+      <a-text value="QUAN NGUYEN" align="left" anchor="left" color="#F2F0EA"
+              width="0.86" position="-0.47 0.243 0.002"></a-text>
+      <a-text value="Vehicle Control Lead" align="left" anchor="left" color="#8B9096"
+              width="0.72" position="-0.47 0.192 0.002"></a-text>
+      <a-plane width="0.94" height="0.002" position="0 0.158 0.002" color="#2A2E34" material="shader: flat"></a-plane>
+
+      <a-text value="EXPERIENCE" align="left" anchor="left" color="#C08B45"
+              width="0.40" position="-0.47 0.113 0.002"></a-text>
+      <a-text value="Sensory Robotics - intern" align="left" anchor="left" color="#F2F0EA"
+              width="0.95" position="-0.47 0.058 0.002"></a-text>
+      <a-text value="Bearcats EV - control lead" align="left" anchor="left" color="#F2F0EA"
+              width="0.95" position="-0.47 0.006 0.002"></a-text>
+      <a-text value="Bearcats EV - HV co-lead" align="left" anchor="left" color="#F2F0EA"
+              width="0.95" position="-0.47 -0.046 0.002"></a-text>
+      <a-text value="FFE Inc. - electrical" align="left" anchor="left" color="#F2F0EA"
+              width="0.95" position="-0.47 -0.098 0.002"></a-text>
+
+      <a-text value="BUILDING" align="left" anchor="left" color="#C08B45"
+              width="0.34" position="-0.47 -0.155 0.002"></a-text>
+      <a-text value="EV4 ECU - CAN - BMS - DAQ" align="left" anchor="left" color="#F2F0EA"
+              width="0.95" position="-0.47 -0.210 0.002"></a-text>
+      <a-text value="Torque vectoring + lap sim" align="left" anchor="left" color="#F2F0EA"
+              width="0.95" position="-0.47 -0.262 0.002"></a-text>
     </a-entity>
 
     <!-- floating tokens: bronze rim, dark face, glyph on both sides -->
     <a-entity id="tokens">
 
-      <a-entity class="token" position="-0.31 -0.40 0.10" scale="0.001 0.001 0.001"
+      <a-entity class="token" position="-0.31 -0.42 0.10" scale="0.001 0.001 0.001"
                 hit-anchor="selector: #hitLinkedin">
         <a-entity animation__bob="property: position; from: 0 0 0; to: 0 0.022 0; dir: alternate; loop: true; dur: 1900; easing: easeInOutSine"
                   animation__tilt="property: rotation; from: 0 -17 0; to: 0 17 0; dir: alternate; loop: true; dur: 2700; easing: easeInOutSine">
@@ -146,7 +169,7 @@
         <a-text value="LINKEDIN" align="center" anchor="center" color="#F2F0EA" width="0.62" position="0 -0.135 0"></a-text>
       </a-entity>
 
-      <a-entity class="token" position="0 -0.40 0.10" scale="0.001 0.001 0.001"
+      <a-entity class="token" position="0 -0.42 0.10" scale="0.001 0.001 0.001"
                 hit-anchor="selector: #hitGithub">
         <a-entity animation__bob="property: position; from: 0 0 0; to: 0 0.022 0; dir: alternate; loop: true; dur: 1900; delay: 240; easing: easeInOutSine"
                   animation__tilt="property: rotation; from: 0 -17 0; to: 0 17 0; dir: alternate; loop: true; dur: 2700; delay: 240; easing: easeInOutSine">
@@ -159,7 +182,7 @@
         <a-text value="GITHUB" align="center" anchor="center" color="#F2F0EA" width="0.62" position="0 -0.135 0"></a-text>
       </a-entity>
 
-      <a-entity class="token" position="0.31 -0.40 0.10" scale="0.001 0.001 0.001"
+      <a-entity class="token" position="0.31 -0.42 0.10" scale="0.001 0.001 0.001"
                 hit-anchor="selector: #hitEmail">
         <a-entity animation__bob="property: position; from: 0 0 0; to: 0 0.022 0; dir: alternate; loop: true; dur: 1900; delay: 480; easing: easeInOutSine"
                   animation__tilt="property: rotation; from: 0 -17 0; to: 0 17 0; dir: alternate; loop: true; dur: 2700; delay: 480; easing: easeInOutSine">
@@ -204,7 +227,7 @@
   const backBtn = document.getElementById('back');
   const target  = document.getElementById('target');
   const clip    = document.getElementById('clip');
-  const plate   = document.getElementById('plate');
+  const screenPanel = document.getElementById('screen');
   const tokens  = Array.from(document.querySelectorAll('.token'));
   const hits    = Array.from(document.querySelectorAll('.hit'));
 
@@ -223,7 +246,7 @@
     scanHint.style.display = 'none';
     clip.currentTime = 0;
     clip.play().catch(() => {});
-    grow(plate, 0);
+    grow(screenPanel, 0);
     tokens.forEach((t, i) => grow(t, 120 + i * 110));   // staggered pop-in
   });
 
@@ -231,7 +254,7 @@
     window.__cardVisible = false;
     scanHint.style.display = 'block';
     clip.pause();
-    shrink(plate);
+    shrink(screenPanel);
     tokens.forEach(shrink);
     hits.forEach(h => h.style.display = 'none');
   });
