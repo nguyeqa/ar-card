@@ -55,6 +55,21 @@
   a-scene .a-canvas{ background:transparent; }
 
   /* invisible tap targets that ride on top of the 3D tokens */
+  #gear{ position:fixed; top:14px; right:14px; z-index:17; display:none;
+    background:rgba(11,12,14,.72); border:1px solid #2A2E34; border-radius:3px; color:var(--bone);
+    font-family:inherit; font-size:15px; padding:8px 11px; }
+  #tune{ position:fixed; right:12px; top:58px; z-index:18; display:none; width:214px;
+    background:rgba(11,12,14,.94); border:1px solid #2A2E34; border-radius:5px; padding:12px; }
+  #tune label{ display:block; font-size:9px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--bronze); margin:9px 0 4px; }
+  #tune label:first-child{ margin-top:0; }
+  #tune input[type=range]{ width:100%; accent-color:#C08B45; }
+  #tune select{ width:100%; background:#15181D; color:var(--bone); border:1px solid #2A2E34;
+    border-radius:3px; padding:6px; font-family:inherit; font-size:11px; }
+  #tune .val{ float:right; color:var(--bone); letter-spacing:0; }
+  #tune code{ display:block; margin-top:10px; padding:7px; background:#15181D; border-radius:3px;
+    font-size:9px; line-height:1.5; color:var(--slate); word-break:break-all; }
+
   .hit{ position:fixed; top:0; left:0; width:82px; height:82px; margin:-41px 0 0 -41px;
     border-radius:50%; z-index:16; display:none; }
 </style>
@@ -84,6 +99,24 @@
 
 <button id="back">&larr; Back</button>
 <div id="scan"><span>Point at the card &middot; hold steady</span></div>
+
+<button id="gear">&#9881;</button>
+<div id="tune">
+  <label>Placement</label>
+  <select id="tPlace">
+    <option value="top">Above the card</option>
+    <option value="bottom">Below the card</option>
+    <option value="left">Left of the card</option>
+    <option value="right">Right of the card</option>
+  </select>
+  <label>Angle <span class="val" id="vAngle">125&deg;</span></label>
+  <input type="range" id="tAngle" min="90" max="180" step="5" value="125">
+  <label>Gap <span class="val" id="vGap">0.02</span></label>
+  <input type="range" id="tGap" min="0" max="30" step="1" value="2">
+  <label>Size <span class="val" id="vScale">1.00</span></label>
+  <input type="range" id="tScale" min="50" max="150" step="5" value="100">
+  <code id="tOut"></code>
+</div>
 
 <!-- these sit exactly over the 3D tokens; invisible, but they are what you actually tap -->
 <a class="hit" id="hitLinkedin" href="https://www.linkedin.com/in/quan-nguyenuc/" target="_blank" rel="noopener" aria-label="LinkedIn"></a>
@@ -126,7 +159,7 @@
          rotation x sets the opening:  dihedral angle = 180 - rotation.x
          30 -> 150 deg (leaning back)   55 -> 125 deg   80 -> 100 deg (nearly upright) -->
     <a-entity id="screen" position="0 0.305 0.008" rotation="55 0 0" scale="0.001 0.001 0.001">
-      <a-entity position="0 0.235 0">
+      <a-entity id="screenPanel" position="0 0.235 0">
         <a-plane width="1.06" height="0.44" color="#0B0C0E" opacity="0.93" material="shader: flat; side: double"></a-plane>
         <a-plane width="1.06" height="0.005" position="0  0.2205 0.001" color="#C08B45" material="shader: flat"></a-plane>
         <a-plane width="1.06" height="0.005" position="0 -0.2205 0.001" color="#C08B45" material="shader: flat"></a-plane>
@@ -214,6 +247,56 @@
     }
   });
 
+  // ---- panel placement -------------------------------------------------
+  // The panel hinges on one edge of the card. 'angle' is the dihedral angle
+  // between the card surface and the panel: 180 = flat, 90 = perpendicular.
+  const CARD_HALF_W = 0.51, CARD_HALF_H = 0.286;   // card is 1 x 0.571
+  const PANEL_HALF_W = 0.53, PANEL_HALF_H = 0.22;
+
+  const cfg = Object.assign(
+    { place: 'top', angle: 125, gap: 0.02, scale: 1 },
+    JSON.parse(localStorage.getItem('arCardLayout') || '{}')
+  );
+
+  function applyLayout() {
+    const screenEl = document.getElementById('screen');
+    const panelEl  = document.getElementById('screenPanel');
+    if (!screenEl || !panelEl) return;
+    const tilt = 180 - cfg.angle;                       // rotation away from the card plane
+    const s = cfg.scale;
+    let hinge, rot, offset;
+
+    if (cfg.place === 'top') {
+      hinge  = [0, CARD_HALF_H + cfg.gap, 0.008];
+      rot    = [tilt, 0, 0];
+      offset = [0, PANEL_HALF_H * s, 0];
+    } else if (cfg.place === 'bottom') {
+      hinge  = [0, -(CARD_HALF_H + cfg.gap), 0.008];
+      rot    = [-tilt, 0, 0];
+      offset = [0, -PANEL_HALF_H * s, 0];
+    } else if (cfg.place === 'left') {
+      hinge  = [-(CARD_HALF_W + cfg.gap), 0, 0.008];
+      rot    = [0, tilt, 0];
+      offset = [-PANEL_HALF_W * s, 0, 0];
+    } else {
+      hinge  = [CARD_HALF_W + cfg.gap, 0, 0.008];
+      rot    = [0, -tilt, 0];
+      offset = [PANEL_HALF_W * s, 0, 0];
+    }
+
+    screenEl.setAttribute('position', hinge.join(' '));
+    screenEl.setAttribute('rotation', rot.join(' '));
+    panelEl.setAttribute('position', offset.join(' '));
+    panelEl.setAttribute('scale', s + ' ' + s + ' ' + s);
+
+    const out = document.getElementById('tOut');
+    if (out) out.textContent =
+      'position="' + hinge.map(n => +n.toFixed(3)).join(' ') + '"\n' +
+      'rotation="' + rot.map(n => +n.toFixed(1)).join(' ') + '"\n' +
+      'panel offset="' + offset.map(n => +n.toFixed(3)).join(' ') + '"';
+    localStorage.setItem('arCardLayout', JSON.stringify(cfg));
+  }
+
   const scene   = document.querySelector('a-scene');
   const landing = document.getElementById('landing');
   const scanHint= document.getElementById('scan');
@@ -225,6 +308,39 @@
   const hits    = Array.from(document.querySelectorAll('.hit'));
 
   window.__cardVisible = false;
+
+  // tuner wiring
+  const gear = document.getElementById('gear');
+  const tune = document.getElementById('tune');
+  const tPlace = document.getElementById('tPlace'), tAngle = document.getElementById('tAngle');
+  const tGap   = document.getElementById('tGap'),   tScale = document.getElementById('tScale');
+
+  tPlace.value = cfg.place; tAngle.value = cfg.angle;
+  tGap.value = Math.round(cfg.gap * 100); tScale.value = Math.round(cfg.scale * 100);
+  document.getElementById('vAngle').textContent = cfg.angle + '\u00B0';
+  document.getElementById('vGap').textContent = cfg.gap.toFixed(2);
+  document.getElementById('vScale').textContent = cfg.scale.toFixed(2);
+
+  gear.addEventListener('click', () => {
+    tune.style.display = tune.style.display === 'block' ? 'none' : 'block';
+  });
+  tPlace.addEventListener('change', e => { cfg.place = e.target.value; applyLayout(); });
+  tAngle.addEventListener('input', e => {
+    cfg.angle = +e.target.value;
+    document.getElementById('vAngle').textContent = cfg.angle + '\u00B0';
+    applyLayout();
+  });
+  tGap.addEventListener('input', e => {
+    cfg.gap = +e.target.value / 100;
+    document.getElementById('vGap').textContent = cfg.gap.toFixed(2);
+    applyLayout();
+  });
+  tScale.addEventListener('input', e => {
+    cfg.scale = +e.target.value / 100;
+    document.getElementById('vScale').textContent = cfg.scale.toFixed(2);
+    applyLayout();
+  });
+  scene.addEventListener('loaded', applyLayout);
 
   function grow(el, delay) {
     el.setAttribute('animation__pop',
@@ -245,6 +361,39 @@
 
   target.addEventListener('targetLost', () => {
     window.__cardVisible = false;
+
+  // tuner wiring
+  const gear = document.getElementById('gear');
+  const tune = document.getElementById('tune');
+  const tPlace = document.getElementById('tPlace'), tAngle = document.getElementById('tAngle');
+  const tGap   = document.getElementById('tGap'),   tScale = document.getElementById('tScale');
+
+  tPlace.value = cfg.place; tAngle.value = cfg.angle;
+  tGap.value = Math.round(cfg.gap * 100); tScale.value = Math.round(cfg.scale * 100);
+  document.getElementById('vAngle').textContent = cfg.angle + '\u00B0';
+  document.getElementById('vGap').textContent = cfg.gap.toFixed(2);
+  document.getElementById('vScale').textContent = cfg.scale.toFixed(2);
+
+  gear.addEventListener('click', () => {
+    tune.style.display = tune.style.display === 'block' ? 'none' : 'block';
+  });
+  tPlace.addEventListener('change', e => { cfg.place = e.target.value; applyLayout(); });
+  tAngle.addEventListener('input', e => {
+    cfg.angle = +e.target.value;
+    document.getElementById('vAngle').textContent = cfg.angle + '\u00B0';
+    applyLayout();
+  });
+  tGap.addEventListener('input', e => {
+    cfg.gap = +e.target.value / 100;
+    document.getElementById('vGap').textContent = cfg.gap.toFixed(2);
+    applyLayout();
+  });
+  tScale.addEventListener('input', e => {
+    cfg.scale = +e.target.value / 100;
+    document.getElementById('vScale').textContent = cfg.scale.toFixed(2);
+    applyLayout();
+  });
+  scene.addEventListener('loaded', applyLayout);
     scanHint.style.display = 'block';
     clip.pause();
     shrink(screenPanel);
@@ -258,6 +407,7 @@
     document.body.classList.add('ar-running');
     scanHint.style.display = 'block';
     backBtn.style.display = 'block';
+    gear.style.display = 'block';
     const start = async () => {
       try { await scene.systems['mindar-image-system'].start(); }
       catch (err) { scanHint.innerHTML = '<span>Could not start: ' + (err && err.message ? err.message : err) + '</span>'; }
@@ -268,10 +418,45 @@
   backBtn.addEventListener('click', () => {
     scene.systems['mindar-image-system'].stop();
     window.__cardVisible = false;
+
+  // tuner wiring
+  const gear = document.getElementById('gear');
+  const tune = document.getElementById('tune');
+  const tPlace = document.getElementById('tPlace'), tAngle = document.getElementById('tAngle');
+  const tGap   = document.getElementById('tGap'),   tScale = document.getElementById('tScale');
+
+  tPlace.value = cfg.place; tAngle.value = cfg.angle;
+  tGap.value = Math.round(cfg.gap * 100); tScale.value = Math.round(cfg.scale * 100);
+  document.getElementById('vAngle').textContent = cfg.angle + '\u00B0';
+  document.getElementById('vGap').textContent = cfg.gap.toFixed(2);
+  document.getElementById('vScale').textContent = cfg.scale.toFixed(2);
+
+  gear.addEventListener('click', () => {
+    tune.style.display = tune.style.display === 'block' ? 'none' : 'block';
+  });
+  tPlace.addEventListener('change', e => { cfg.place = e.target.value; applyLayout(); });
+  tAngle.addEventListener('input', e => {
+    cfg.angle = +e.target.value;
+    document.getElementById('vAngle').textContent = cfg.angle + '\u00B0';
+    applyLayout();
+  });
+  tGap.addEventListener('input', e => {
+    cfg.gap = +e.target.value / 100;
+    document.getElementById('vGap').textContent = cfg.gap.toFixed(2);
+    applyLayout();
+  });
+  tScale.addEventListener('input', e => {
+    cfg.scale = +e.target.value / 100;
+    document.getElementById('vScale').textContent = cfg.scale.toFixed(2);
+    applyLayout();
+  });
+  scene.addEventListener('loaded', applyLayout);
     landing.style.display = 'flex';
     document.body.classList.remove('ar-running');
     scanHint.style.display = 'none';
     backBtn.style.display = 'none';
+    gear.style.display = 'none';
+    tune.style.display = 'none';
     hits.forEach(h => h.style.display = 'none');
   });
 </script>
