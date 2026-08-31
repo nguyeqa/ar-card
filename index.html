@@ -12,7 +12,7 @@
 <style>
   :root{ --carbon:#0B0C0E; --bone:#F2F0EA; --red:#CF142B; --bronze:#C08B45; --slate:#8B9096; }
   *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  html,body{ height:100%; background:var(--carbon); color:var(--bone);
+  html,body{ width:100%; height:100%; background:var(--carbon); color:var(--bone);
     font-family:'JetBrains Mono',ui-monospace,monospace; overflow:hidden; }
   a{ color:inherit; text-decoration:none; }
 
@@ -54,7 +54,9 @@
     background:rgba(11,12,14,.72); border:1px solid #2A2E34; border-radius:3px;
     color:var(--bone); font-family:inherit; font-size:11px; letter-spacing:.12em;
     text-transform:uppercase; padding:9px 12px; }
-  a-scene{ z-index:5; }
+  a-scene{ position:fixed; top:0; left:0; width:100%; height:100%; }
+  a-scene .a-canvas{ background:transparent; }
+  body.ar-running{ background:transparent; }
 </style>
 </head>
 <body>
@@ -87,7 +89,8 @@
 <a-scene
   mindar-image="imageTargetSrc: ./assets/targets.mind; autoStart: false; uiScanning: no; uiLoading: no; uiError: no; filterMinCF: 0.0001; filterBeta: 0.005"
   color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights"
-  embedded vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+  background="transparent: true"
+  vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
 
   <a-assets>
     <video id="clip" src="./assets/animated.mp4" preload="auto" loop muted playsinline webkit-playsinline crossorigin="anonymous"></video>
@@ -192,15 +195,23 @@
     // a user gesture is required before video playback on iOS
     try { await clip.play(); clip.pause(); } catch (e) {}
     landing.style.display = 'none';
+    document.body.classList.add('ar-running');
     scanHint.style.display = 'block';
     backBtn.style.display = 'block';
-    const start = () => scene.systems['mindar-image-system'].start();
+    const start = async () => {
+      try {
+        await scene.systems['mindar-image-system'].start();
+      } catch (err) {
+        scanHint.innerHTML = '<span>Could not start: ' + (err && err.message ? err.message : err) + '</span>';
+      }
+    };
     if (scene.hasLoaded) start(); else scene.addEventListener('loaded', start);
   });
 
   backBtn.addEventListener('click', () => {
     scene.systems['mindar-image-system'].stop();
     landing.style.display = 'flex';
+    document.body.classList.remove('ar-running');
     scanHint.style.display = 'none';
     backBtn.style.display = 'none';
   });
