@@ -45,7 +45,7 @@
   .link img{ width:14px; height:14px; display:block; }
 
   /* ---------- in-AR overlay ---------- */
-  #scan{ position:fixed; left:0; right:0; bottom:26px; z-index:15; text-align:center;
+  #scan{ position:fixed; left:0; right:0; bottom:104px; z-index:15; text-align:center;
     font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--bone);
     text-shadow:0 1px 6px rgba(0,0,0,.8); display:none; }
   #scan span{ display:inline-block; background:rgba(11,12,14,.72); border:1px solid #2A2E34;
@@ -55,6 +55,15 @@
     color:var(--bone); font-family:inherit; font-size:11px; letter-spacing:.12em;
     text-transform:uppercase; padding:9px 12px; }
   a-scene{ position:fixed; top:0; left:0; width:100%; height:100%; }
+
+  #arlinks{ position:fixed; left:0; right:0; bottom:0; z-index:16; display:none;
+    gap:8px; padding:12px 14px calc(14px + env(safe-area-inset-bottom));
+    background:linear-gradient(180deg,rgba(11,12,14,0),rgba(11,12,14,.92) 38%); }
+  #arlinks a{ flex:1; display:flex; flex-direction:column; align-items:center; gap:5px;
+    background:rgba(16,19,24,.94); border:1px solid #2A2E34; border-radius:4px; padding:11px 6px;
+    font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--bone); }
+  #arlinks a:active{ background:var(--bone); color:var(--carbon); }
+  #arlinks img{ width:19px; height:19px; display:block; }
   a-scene .a-canvas{ background:transparent; }
   body.ar-running{ background:transparent; }
 </style>
@@ -83,6 +92,14 @@
 </div>
 
 <button id="back">&larr; Back</button>
+<div id="arlinks">
+  <a href="https://www.linkedin.com/in/quan-nguyenuc/" target="_blank" rel="noopener">
+    <img src="./assets/icon-linkedin.png" alt="">LinkedIn</a>
+  <a href="https://github.com/nguyeqa" target="_blank" rel="noopener">
+    <img src="./assets/icon-github.png" alt="">GitHub</a>
+  <a href="mailto:nguyeqa@mail.uc.edu">
+    <img src="./assets/icon-email.png" alt="">Email</a>
+</div>
 <div id="scan"><span>Point at the card &middot; hold steady</span></div>
 
 <!-- ============ AR scene ============ -->
@@ -125,33 +142,11 @@
               width="0.95" position="0 -0.035 0.001"></a-text>
     </a-entity>
 
-    <!-- tappable links below the card -->
-    <a-entity id="buttons" position="0 -0.30 0.02" scale="0.001 0.001 0.001">
-      <a-entity position="-0.34 0 0">
-        <a-plane class="clickable" width="0.31" height="0.13" color="#101318" opacity="0.95"
-                 material="shader: flat" open-link="url: https://www.linkedin.com/in/quan-nguyenuc/"></a-plane>
-        <a-image src="#icLinkedin" width="0.06" height="0.06" position="-0.10 0 0.001"></a-image>
-        <a-text value="LINKEDIN" align="left" anchor="align" color="#F2F0EA" width="0.62" position="-0.055 0 0.001"></a-text>
-      </a-entity>
-      <a-entity position="0 0 0">
-        <a-plane class="clickable" width="0.31" height="0.13" color="#101318" opacity="0.95"
-                 material="shader: flat" open-link="url: https://github.com/nguyeqa"></a-plane>
-        <a-image src="#icGithub" width="0.06" height="0.06" position="-0.10 0 0.001"></a-image>
-        <a-text value="GITHUB" align="left" anchor="align" color="#F2F0EA" width="0.62" position="-0.055 0 0.001"></a-text>
-      </a-entity>
-      <a-entity position="0.34 0 0">
-        <a-plane class="clickable" width="0.31" height="0.13" color="#101318" opacity="0.95"
-                 material="shader: flat" open-link="url: mailto:nguyeqa@mail.uc.edu"></a-plane>
-        <a-image src="#icEmail" width="0.06" height="0.06" position="-0.10 0 0.001"></a-image>
-        <a-text value="EMAIL" align="left" anchor="align" color="#F2F0EA" width="0.62" position="-0.055 0 0.001"></a-text>
-      </a-entity>
-    </a-entity>
-
   </a-entity>
 </a-scene>
 
 <script>
-  AFRAME.registerComponent('open-link', {
+  AFRAME.registerComponent('open-link-unused', {
     schema: { url: { type: 'string' } },
     init: function () {
       this.el.addEventListener('click', () => {
@@ -168,7 +163,7 @@
   const target  = document.getElementById('target');
   const clip    = document.getElementById('clip');
   const plate   = document.getElementById('plate');
-  const buttons = document.getElementById('buttons');
+  const arlinks = document.getElementById('arlinks');
 
   // pop the overlays in when the card is found, hide them when it is lost
   function grow(el, to) {
@@ -182,13 +177,13 @@
     scanHint.style.display = 'none';
     clip.currentTime = 0;
     clip.play().catch(() => {});
-    grow(plate, 1); grow(buttons, 1);
+    grow(plate, 1);
   });
 
   target.addEventListener('targetLost', () => {
     scanHint.style.display = 'block';
     clip.pause();
-    shrink(plate); shrink(buttons);
+    shrink(plate);
   });
 
   document.getElementById('start').addEventListener('click', async () => {
@@ -198,6 +193,7 @@
     document.body.classList.add('ar-running');
     scanHint.style.display = 'block';
     backBtn.style.display = 'block';
+    arlinks.style.display = 'flex';
     const start = async () => {
       try {
         await scene.systems['mindar-image-system'].start();
@@ -214,6 +210,7 @@
     document.body.classList.remove('ar-running');
     scanHint.style.display = 'none';
     backBtn.style.display = 'none';
+    arlinks.style.display = 'none';
   });
 </script>
 </body>
