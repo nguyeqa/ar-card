@@ -391,17 +391,41 @@
   const PAGE_TITLES = ['SKILLS', 'NOW', 'PROJECTS', 'EXPERIENCE'];
   let page = 0;
 
+  const PAGE_MS = 6000;          // how long each page stays up
+  let pageTimer = null;
+
   function setPage(i) {
     const pages = document.querySelectorAll('.page');
     if (!pages.length) return;
     page = (i + pages.length) % pages.length;
-    pages.forEach((el, n) => el.setAttribute('visible', n === page));
+    pages.forEach((el, n) => {
+      const on = (n === page);
+      el.setAttribute('visible', on);
+      if (on) {                                   // slide the new page up as it appears
+        el.setAttribute('position', '0 -0.055 0');
+        el.setAttribute('animation__slide',
+          'property: position; to: 0 0 0; dur: 320; easing: easeOutCubic');
+      }
+    });
     const title = document.getElementById('pageTitle');
     if (title) title.setAttribute('text', 'value', PAGE_TITLES[page]);
     const dots = document.getElementById('dots');
     if (dots) dots.innerHTML = PAGE_TITLES.map((_, n) =>
       '<i class="' + (n === page ? 'on' : '') + '"></i>').join('');
   }
+
+  // pages advance on their own; any manual input restarts the clock
+  function startPaging(reset) {
+    stopPaging();
+    if (reset) setPage(0);
+    pageTimer = setInterval(() => {
+      if (window.__cardVisible) setPage(page + 1);
+    }, PAGE_MS);
+  }
+  function stopPaging() {
+    if (pageTimer) { clearInterval(pageTimer); pageTimer = null; }
+  }
+  function nudge(delta) { setPage(page + delta); startPaging(false); }
 
   const scene   = document.querySelector('a-scene');
   const landing = document.getElementById('landing');
@@ -416,8 +440,8 @@
   window.__cardVisible = false;
 
   const navEl = document.getElementById('nav');
-  document.getElementById('pgUp').addEventListener('click', () => setPage(page - 1));
-  document.getElementById('pgDn').addEventListener('click', () => setPage(page + 1));
+  document.getElementById('pgUp').addEventListener('click', () => nudge(-1));
+  document.getElementById('pgDn').addEventListener('click', () => nudge(1));
 
   // swipe up / down anywhere on the view also turns the page
   let touchY = null;
@@ -425,7 +449,7 @@
   document.addEventListener('touchend', e => {
     if (touchY === null) return;
     const dy = e.changedTouches[0].clientY - touchY;
-    if (Math.abs(dy) > 70) setPage(page + (dy < 0 ? 1 : -1));
+    if (Math.abs(dy) > 70) nudge(dy < 0 ? 1 : -1);
     touchY = null;
   }, { passive: true });
 
@@ -496,14 +520,15 @@
     grow(screenPanel, 0);
     if (avatarEl.getObject3D('mesh')) avatarEl.setAttribute('visible', true);
     tokens.forEach((t, i) => grow(t, 120 + i * 110));   // staggered pop-in
+    startPaging(true);                                  // restart the carousel from page 1
   });
 
   target.addEventListener('targetLost', () => {
     window.__cardVisible = false;
 
   const navEl = document.getElementById('nav');
-  document.getElementById('pgUp').addEventListener('click', () => setPage(page - 1));
-  document.getElementById('pgDn').addEventListener('click', () => setPage(page + 1));
+  document.getElementById('pgUp').addEventListener('click', () => nudge(-1));
+  document.getElementById('pgDn').addEventListener('click', () => nudge(1));
 
   // swipe up / down anywhere on the view also turns the page
   let touchY = null;
@@ -511,7 +536,7 @@
   document.addEventListener('touchend', e => {
     if (touchY === null) return;
     const dy = e.changedTouches[0].clientY - touchY;
-    if (Math.abs(dy) > 70) setPage(page + (dy < 0 ? 1 : -1));
+    if (Math.abs(dy) > 70) nudge(dy < 0 ? 1 : -1);
     touchY = null;
   }, { passive: true });
 
@@ -582,6 +607,7 @@
     gear.style.display = 'block';
     navEl.style.display = 'flex';
     setPage(0);
+    startPaging(true);
     const start = async () => {
       try { await scene.systems['mindar-image-system'].start(); }
       catch (err) { scanHint.innerHTML = '<span>Could not start: ' + (err && err.message ? err.message : err) + '</span>'; }
@@ -594,8 +620,8 @@
     window.__cardVisible = false;
 
   const navEl = document.getElementById('nav');
-  document.getElementById('pgUp').addEventListener('click', () => setPage(page - 1));
-  document.getElementById('pgDn').addEventListener('click', () => setPage(page + 1));
+  document.getElementById('pgUp').addEventListener('click', () => nudge(-1));
+  document.getElementById('pgDn').addEventListener('click', () => nudge(1));
 
   // swipe up / down anywhere on the view also turns the page
   let touchY = null;
@@ -603,7 +629,7 @@
   document.addEventListener('touchend', e => {
     if (touchY === null) return;
     const dy = e.changedTouches[0].clientY - touchY;
-    if (Math.abs(dy) > 70) setPage(page + (dy < 0 ? 1 : -1));
+    if (Math.abs(dy) > 70) nudge(dy < 0 ? 1 : -1);
     touchY = null;
   }, { passive: true });
 
@@ -664,6 +690,7 @@
     gear.style.display = 'none';
     navEl.style.display = 'none';
     tune.style.display = 'none';
+    stopPaging();
     hits.forEach(h => h.style.display = 'none');
   });
 </script>
