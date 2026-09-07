@@ -146,6 +146,7 @@
     <img id="icGithub"   src="./assets/icon-github.png?v=3">
     <img id="icEmail"    src="./assets/icon-email.png?v=3">
     <img id="logoBER"    src="./assets/logo-ber.png?v=1">
+    <img id="figCorner" src="./assets/diagram-corner.png?v=1">
   </a-assets>
 
   <a-entity light="type: ambient; intensity: 0.75"></a-entity>
@@ -166,52 +167,46 @@
       <a-plane width="0.006" height="0.588" position="-0.507 0 0" color="#C08B45" material="shader: flat"></a-plane>
     </a-entity>
 
-    <!-- greeting + skills + where-I-work panel, hinged along the card's top edge.
+    <!-- greeting + skills + current work panel, hinged along the card's top edge.
          rotation x sets the opening:  dihedral angle = 180 - rotation.x
          30 -> 150 deg (leaning back)   55 -> 125 deg   80 -> 100 deg (nearly upright) -->
     <a-entity id="screen" position="0 0.305 0.008" rotation="55 0 0" scale="0.001 0.001 0.001">
-      <a-entity id="screenPanel" position="0 0.365 0">
-        <a-plane width="1.10" height="0.70" color="#0B0C0E" opacity="0.93" material="shader: flat; side: double"></a-plane>
-        <a-plane width="1.10" height="0.005" position="0  0.3505 0.001" color="#C08B45" material="shader: flat"></a-plane>
-        <a-plane width="1.10" height="0.005" position="0 -0.3505 0.001" color="#C08B45" material="shader: flat"></a-plane>
+      <a-entity id="screenPanel" position="0 0.52 0">
+        <a-plane width="1.10" height="1.04" color="#0B0C0E" opacity="0.93" material="shader: flat; side: double"></a-plane>
+        <a-plane width="1.10" height="0.005" position="0  0.5205 0.001" color="#C08B45" material="shader: flat"></a-plane>
+        <a-plane width="1.10" height="0.005" position="0 -0.5205 0.001" color="#C08B45" material="shader: flat"></a-plane>
 
         <a-text value="Hi, I'm Quan" align="left" anchor="left" color="#F2F0EA"
-                width="0.70" position="-0.50 0.292 0.002"></a-text>
-        <a-text value="Vehicle control engineer" align="left" anchor="left" color="#8B9096"
-                width="0.80" position="-0.50 0.236 0.002"></a-text>
-        <a-plane width="1.00" height="0.002" position="0 0.202 0.002" color="#2A2E34" material="shader: flat"></a-plane>
+                width="0.70" position="-0.50 0.462 0.002"></a-text>
+        <a-plane width="1.00" height="0.002" position="0 0.425 0.002" color="#2A2E34" material="shader: flat"></a-plane>
 
-        <!-- left column -->
-        <a-text value="EMBEDDED" align="left" anchor="left" color="#C08B45" width="0.30" position="-0.50 0.162 0.002"></a-text>
-        <a-text value="C / C++ firmware"   align="left" anchor="left" color="#F2F0EA" width="0.52" position="-0.50 0.112 0.002"></a-text>
-        <a-text value="Simulink / Coder"   align="left" anchor="left" color="#F2F0EA" width="0.52" position="-0.50 0.068 0.002"></a-text>
-        <a-text value="CAN bus / DBC"      align="left" anchor="left" color="#F2F0EA" width="0.52" position="-0.50 0.024 0.002"></a-text>
-        <a-text value="BMS / high voltage" align="left" anchor="left" color="#F2F0EA" width="0.52" position="-0.50 -0.020 0.002"></a-text>
+        <a-text value="EMBEDDED" align="left" anchor="left" color="#C08B45" width="0.26" position="-0.50 0.395 0.002"></a-text>
+        <a-text value="C / C++  Simulink  CAN  BMS" align="left" anchor="left" color="#F2F0EA" width="0.72" position="-0.26 0.395 0.002"></a-text>
+        <a-text value="CONTROLS" align="left" anchor="left" color="#C08B45" width="0.26" position="-0.50 0.347 0.002"></a-text>
+        <a-text value="FOC  torque vectoring  lap sim" align="left" anchor="left" color="#F2F0EA" width="0.72" position="-0.26 0.347 0.002"></a-text>
+        <a-text value="TOOLS" align="left" anchor="left" color="#C08B45" width="0.18" position="-0.50 0.299 0.002"></a-text>
+        <a-text value="MATLAB  Python  ROS 2  Linux" align="left" anchor="left" color="#F2F0EA" width="0.72" position="-0.26 0.299 0.002"></a-text>
 
-        <!-- right column -->
-        <a-text value="CONTROLS" align="left" anchor="left" color="#C08B45" width="0.30" position="0.02 0.162 0.002"></a-text>
-        <a-text value="FOC / SVPWM"      align="left" anchor="left" color="#F2F0EA" width="0.52" position="0.02 0.112 0.002"></a-text>
-        <a-text value="Torque vectoring" align="left" anchor="left" color="#F2F0EA" width="0.52" position="0.02 0.068 0.002"></a-text>
-        <a-text value="Traction control" align="left" anchor="left" color="#F2F0EA" width="0.52" position="0.02 0.024 0.002"></a-text>
-        <a-text value="Lap time sim"     align="left" anchor="left" color="#F2F0EA" width="0.52" position="0.02 -0.020 0.002"></a-text>
+        <a-plane width="1.00" height="0.002" position="0 0.265 0.002" color="#2A2E34" material="shader: flat"></a-plane>
 
-        <!-- tools row -->
-        <a-text value="TOOLS" align="left" anchor="left" color="#C08B45" width="0.22" position="-0.50 -0.072 0.002"></a-text>
-        <a-text value="MATLAB / Python"  align="left" anchor="left" color="#F2F0EA" width="0.52" position="-0.50 -0.122 0.002"></a-text>
-        <a-text value="ROS 2 / OpenCV"   align="left" anchor="left" color="#F2F0EA" width="0.52" position="0.02 -0.122 0.002"></a-text>
-        <a-text value="Linux / Git"      align="left" anchor="left" color="#F2F0EA" width="0.52" position="-0.50 -0.166 0.002"></a-text>
-        <a-text value="Raspberry Pi DAQ" align="left" anchor="left" color="#F2F0EA" width="0.52" position="0.02 -0.166 0.002"></a-text>
-
-        <a-plane width="1.00" height="0.002" position="0 -0.202 0.002" color="#2A2E34" material="shader: flat"></a-plane>
-
-        <!-- where I work: badge left, caption right, aligned to the columns above -->
-        <a-text value="WHERE" align="left" anchor="left" color="#C08B45" width="0.22" position="-0.50 -0.232 0.002"></a-text>
-        <a-image src="#logoBER" width="0.42" height="0.14" position="-0.29 -0.295 0.002" material="shader: flat"></a-image>
-        <a-plane width="0.428" height="0.148" position="-0.29 -0.295 0.0015" color="#C08B45" material="shader: flat"></a-plane>
+        <!-- current work -->
+        <a-text value="NOW" align="left" anchor="left" color="#C08B45" width="0.16" position="-0.50 0.235 0.002"></a-text>
         <a-text value="Bearcats Electric Racing" align="left" anchor="left" color="#F2F0EA"
-                width="0.62" position="-0.05 -0.268 0.002"></a-text>
+                width="0.52" position="-0.28 0.235 0.002"></a-text>
         <a-text value="Vehicle Control Lead" align="left" anchor="left" color="#8B9096"
-                width="0.54" position="-0.05 -0.318 0.002"></a-text>
+                width="0.42" position="-0.28 0.196 0.002"></a-text>
+
+        <a-text value="Torque vectoring" align="left" anchor="left" color="#C08B45"
+                width="0.60" position="-0.50 0.140 0.002"></a-text>
+        <a-text value="Rear-wheel drive, dual motors." align="left" anchor="left" color="#F2F0EA"
+                width="0.94" position="-0.50 0.092 0.002"></a-text>
+        <a-text value="Vehicle dynamics for stability" align="left" anchor="left" color="#F2F0EA"
+                width="0.94" position="-0.50 0.055 0.002"></a-text>
+        <a-text value="through corner entry." align="left" anchor="left" color="#F2F0EA"
+                width="0.66" position="-0.50 0.018 0.002"></a-text>
+
+        <a-plane width="0.948" height="0.556" position="0 -0.255 0.0015" color="#C08B45" material="shader: flat"></a-plane>
+        <a-image src="#figCorner" width="0.94" height="0.548" position="0 -0.255 0.002" material="shader: flat"></a-image>
       </a-entity>
     </a-entity>
 
@@ -293,7 +288,7 @@
   // The panel hinges on one edge of the card. 'angle' is the dihedral angle
   // between the card surface and the panel: 180 = flat, 90 = perpendicular.
   const CARD_HALF_W = 0.51, CARD_HALF_H = 0.286;   // card is 1 x 0.571
-  const PANEL_HALF_W = 0.55, PANEL_HALF_H = 0.365;
+  const PANEL_HALF_W = 0.55, PANEL_HALF_H = 0.52;
 
   const cfg = Object.assign(
     { place: 'top', angle: 125, gap: 0.02, scale: 1,
