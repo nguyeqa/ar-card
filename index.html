@@ -308,9 +308,32 @@ const Doc = (function () {
       ops.push({ t: 'text', text, font: '400 28px ' + F, color: BONE, x: PAD_X + 26, y });
     };
     const rule = () => { y += 28; ops.push({ t: 'rule', y }); };
+    const para = (text, font, color, dy, lh) => {          // wraps to the panel width
+      y += dy;
+      dctx.font = font;
+      const maxW = W - PAD_X * 2;
+      let cur = '';
+      text.split(' ').forEach(word => {
+        const test = cur ? cur + ' ' + word : word;
+        if (dctx.measureText(test).width > maxW && cur) {
+          ops.push({ t: 'text', text: cur, font, color, x: PAD_X, y });
+          y += lh;
+          cur = word;
+        } else { cur = test; }
+      });
+      if (cur) ops.push({ t: 'text', text: cur, font, color, x: PAD_X, y });
+    };
 
-    line("Hi, I'm Quan", '700 52px ' + F, BONE, 76);
-    line('Vehicle control engineer', '400 30px ' + F, SLATE, 44);
+    label('INTRODUCTION');
+    line("Hi, I am Quan Nguyen", '700 46px ' + F, BONE, 66);
+    para('3rd year Electrical Engineering student at the University of Cincinnati.',
+         '400 27px ' + F, SLATE, 46, 36);
+    para('So far I have completed two co-op rotations, at FFE Inc. and Sensory Robotics, '
+       + 'where I worked hands-on with both hardware and software in the electrical industry.',
+         '400 27px ' + F, BONE, 44, 36);
+    para('I am also an active member of Bearcats Electric Racing, where we design, build and '
+       + 'race a Formula-style electric vehicle. I take care of the main control of the car.',
+         '400 27px ' + F, BONE, 40, 36);
     rule();
 
     label('NOW');
