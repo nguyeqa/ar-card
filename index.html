@@ -71,6 +71,15 @@
   #tune code{ display:block; margin-top:10px; padding:7px; background:#15181D; border-radius:3px;
     font-size:9px; line-height:1.5; color:var(--slate); word-break:break-all; }
 
+  #nav{ position:fixed; right:12px; top:50%; transform:translateY(-50%); z-index:16; display:none;
+    flex-direction:column; align-items:center; gap:9px; }
+  #nav button{ width:40px; height:40px; border-radius:50%; background:rgba(11,12,14,.72);
+    border:1px solid #2A2E34; color:var(--bone); font-size:16px; font-family:inherit; }
+  #nav button:active{ background:var(--bone); color:var(--carbon); }
+  #dots{ display:flex; flex-direction:column; gap:6px; }
+  #dots i{ width:6px; height:6px; border-radius:50%; background:#3A3F46; display:block; }
+  #dots i.on{ background:var(--bronze); }
+
   .hit{ position:fixed; top:0; left:0; width:82px; height:82px; margin:-41px 0 0 -41px;
     border-radius:50%; z-index:16; display:none; }
 </style>
@@ -102,6 +111,11 @@
 <div id="scan"><span>Point at the card &middot; hold steady</span></div>
 
 <button id="gear">&#9881;</button>
+<div id="nav">
+  <button id="pgUp">&#9650;</button>
+  <div id="dots"></div>
+  <button id="pgDn">&#9660;</button>
+</div>
 <div id="tune">
   <label>Placement</label>
   <select id="tPlace">
@@ -167,46 +181,76 @@
       <a-plane width="0.006" height="0.588" position="-0.507 0 0" color="#C08B45" material="shader: flat"></a-plane>
     </a-entity>
 
-    <!-- greeting + skills + current work panel, hinged along the card's top edge.
-         rotation x sets the opening:  dihedral angle = 180 - rotation.x
-         30 -> 150 deg (leaning back)   55 -> 125 deg   80 -> 100 deg (nearly upright) -->
+    <!-- paged panel, hinged along the card's top edge.
+         rotation x sets the opening:  dihedral angle = 180 - rotation.x -->
     <a-entity id="screen" position="0 0.305 0.008" rotation="55 0 0" scale="0.001 0.001 0.001">
-      <a-entity id="screenPanel" position="0 0.52 0">
-        <a-plane width="1.10" height="1.04" color="#0B0C0E" opacity="0.93" material="shader: flat; side: double"></a-plane>
-        <a-plane width="1.10" height="0.005" position="0  0.5205 0.001" color="#C08B45" material="shader: flat"></a-plane>
-        <a-plane width="1.10" height="0.005" position="0 -0.5205 0.001" color="#C08B45" material="shader: flat"></a-plane>
+      <a-entity id="screenPanel" position="0 0.37 0">
+        <a-plane width="1.10" height="0.74" color="#0B0C0E" opacity="0.93" material="shader: flat; side: double"></a-plane>
+        <a-plane width="1.10" height="0.005" position="0  0.3705 0.001" color="#C08B45" material="shader: flat"></a-plane>
+        <a-plane width="1.10" height="0.005" position="0 -0.3705 0.001" color="#C08B45" material="shader: flat"></a-plane>
 
-        <a-text value="Hi, I'm Quan" align="left" anchor="left" color="#F2F0EA"
-                width="0.70" position="-0.50 0.462 0.002"></a-text>
-        <a-plane width="1.00" height="0.002" position="0 0.425 0.002" color="#2A2E34" material="shader: flat"></a-plane>
+        <!-- fixed header -->
+          <a-text value="Hi, I'm Quan" align="left" anchor="left" color="#F2F0EA" width="0.62" position="-0.50 0.305 0.002"></a-text>
+          <a-text id="pageTitle" value="SKILLS" align="right" anchor="right" color="#C08B45" width="0.34" position="0.50 0.305 0.002"></a-text>
+          <a-plane width="1.00" height="0.002" position="0 0.272 0.002" color="#2A2E34" material="shader: flat"></a-plane>
 
-        <a-text value="EMBEDDED" align="left" anchor="left" color="#C08B45" width="0.26" position="-0.50 0.395 0.002"></a-text>
-        <a-text value="C / C++  Simulink  CAN  BMS" align="left" anchor="left" color="#F2F0EA" width="0.72" position="-0.26 0.395 0.002"></a-text>
-        <a-text value="CONTROLS" align="left" anchor="left" color="#C08B45" width="0.26" position="-0.50 0.347 0.002"></a-text>
-        <a-text value="FOC  torque vectoring  lap sim" align="left" anchor="left" color="#F2F0EA" width="0.72" position="-0.26 0.347 0.002"></a-text>
-        <a-text value="TOOLS" align="left" anchor="left" color="#C08B45" width="0.18" position="-0.50 0.299 0.002"></a-text>
-        <a-text value="MATLAB  Python  ROS 2  Linux" align="left" anchor="left" color="#F2F0EA" width="0.72" position="-0.26 0.299 0.002"></a-text>
+          <a-entity class="page" id="page0">
+          <a-text value="EMBEDDED" align="left" anchor="left" color="#C08B45" width="0.30" position="-0.50 0.215 0.002"></a-text>
+          <a-text value="C / C++ firmware" align="left" anchor="left" color="#F2F0EA" width="0.52" position="-0.50 0.165 0.002"></a-text>
+          <a-text value="Simulink / Coder" align="left" anchor="left" color="#F2F0EA" width="0.52" position="-0.50 0.121 0.002"></a-text>
+          <a-text value="CAN bus / DBC" align="left" anchor="left" color="#F2F0EA" width="0.52" position="-0.50 0.077 0.002"></a-text>
+          <a-text value="BMS / high voltage" align="left" anchor="left" color="#F2F0EA" width="0.52" position="-0.50 0.033 0.002"></a-text>
+          <a-text value="CONTROLS" align="left" anchor="left" color="#C08B45" width="0.30" position="0.02 0.215 0.002"></a-text>
+          <a-text value="FOC / SVPWM" align="left" anchor="left" color="#F2F0EA" width="0.52" position="0.02 0.165 0.002"></a-text>
+          <a-text value="Torque vectoring" align="left" anchor="left" color="#F2F0EA" width="0.52" position="0.02 0.121 0.002"></a-text>
+          <a-text value="Traction control" align="left" anchor="left" color="#F2F0EA" width="0.52" position="0.02 0.077 0.002"></a-text>
+          <a-text value="Lap time sim" align="left" anchor="left" color="#F2F0EA" width="0.52" position="0.02 0.033 0.002"></a-text>
+          <a-text value="TOOLS" align="left" anchor="left" color="#C08B45" width="0.22" position="-0.50 -0.025 0.002"></a-text>
+          <a-text value="MATLAB / Python / Linux" align="left" anchor="left" color="#F2F0EA" width="0.52" position="-0.50 -0.075 0.002"></a-text>
+          <a-text value="ROS 2 / OpenCV / Git" align="left" anchor="left" color="#F2F0EA" width="0.52" position="0.02 -0.075 0.002"></a-text>
+          <a-text value="Vietnamese / German" align="left" anchor="left" color="#8B9096" width="0.50" position="-0.50 -0.145 0.002"></a-text>
+          </a-entity>
 
-        <a-plane width="1.00" height="0.002" position="0 0.265 0.002" color="#2A2E34" material="shader: flat"></a-plane>
+          <a-entity class="page" id="page1" visible="false">
+          <a-text value="Torque vectoring - RWD dual motors" align="left" anchor="left" color="#C08B45" width="0.98" position="-0.50 0.222 0.002"></a-text>
+          <a-text value="Stability through corner entry" align="left" anchor="left" color="#F2F0EA" width="0.90" position="-0.50 0.186 0.002"></a-text>
+          <a-plane width="0.908" height="0.528" position="0 -0.100 0.0015" color="#C08B45" material="shader: flat"></a-plane>
+          <a-image src="#figCorner" width="0.90" height="0.520" position="0 -0.100 0.002" material="shader: flat"></a-image>
+          </a-entity>
 
-        <!-- current work -->
-        <a-text value="NOW" align="left" anchor="left" color="#C08B45" width="0.16" position="-0.50 0.235 0.002"></a-text>
-        <a-text value="Bearcats Electric Racing" align="left" anchor="left" color="#F2F0EA"
-                width="0.52" position="-0.28 0.235 0.002"></a-text>
-        <a-text value="Vehicle Control Lead" align="left" anchor="left" color="#8B9096"
-                width="0.42" position="-0.28 0.196 0.002"></a-text>
+          <a-entity class="page" id="page2" visible="false">
+          <a-text value="What I build" align="left" anchor="left" color="#C08B45" width="0.46" position="-0.50 0.215 0.002"></a-text>
+          <a-plane width="0.011" height="0.011" position="-0.495 0.155 0.002" color="#C08B45" material="shader: flat"></a-plane>
+          <a-text value="EV4 ECU - Simulink to flash" align="left" anchor="left" color="#F2F0EA" width="0.86" position="-0.468 0.155 0.002"></a-text>
+          <a-plane width="0.011" height="0.011" position="-0.495 0.105 0.002" color="#C08B45" material="shader: flat"></a-plane>
+          <a-text value="CAN telemetry to the pit wall" align="left" anchor="left" color="#F2F0EA" width="0.86" position="-0.468 0.105 0.002"></a-text>
+          <a-plane width="0.011" height="0.011" position="-0.495 0.055 0.002" color="#C08B45" material="shader: flat"></a-plane>
+          <a-text value="Lap time sim in MATLAB" align="left" anchor="left" color="#F2F0EA" width="0.86" position="-0.468 0.055 0.002"></a-text>
+          <a-plane width="0.011" height="0.011" position="-0.495 0.005 0.002" color="#C08B45" material="shader: flat"></a-plane>
+          <a-text value="Traction control + TV models" align="left" anchor="left" color="#F2F0EA" width="0.86" position="-0.468 0.005 0.002"></a-text>
+          <a-plane width="0.011" height="0.011" position="-0.495 -0.045 0.002" color="#C08B45" material="shader: flat"></a-plane>
+          <a-text value="BMS firmware on Teensy" align="left" anchor="left" color="#F2F0EA" width="0.86" position="-0.468 -0.045 0.002"></a-text>
+          <a-plane width="0.011" height="0.011" position="-0.495 -0.095 0.002" color="#C08B45" material="shader: flat"></a-plane>
+          <a-text value="ToF perception, SICK + ROS 2" align="left" anchor="left" color="#F2F0EA" width="0.86" position="-0.468 -0.095 0.002"></a-text>
+          <a-text value="github.com/nguyeqa" align="left" anchor="left" color="#8B9096" width="0.52" position="-0.50 -0.165 0.002"></a-text>
+          </a-entity>
 
-        <a-text value="Torque vectoring" align="left" anchor="left" color="#C08B45"
-                width="0.60" position="-0.50 0.140 0.002"></a-text>
-        <a-text value="Rear-wheel drive, dual motors." align="left" anchor="left" color="#F2F0EA"
-                width="0.94" position="-0.50 0.092 0.002"></a-text>
-        <a-text value="Vehicle dynamics for stability" align="left" anchor="left" color="#F2F0EA"
-                width="0.94" position="-0.50 0.055 0.002"></a-text>
-        <a-text value="through corner entry." align="left" anchor="left" color="#F2F0EA"
-                width="0.66" position="-0.50 0.018 0.002"></a-text>
-
-        <a-plane width="0.948" height="0.556" position="0 -0.255 0.0015" color="#C08B45" material="shader: flat"></a-plane>
-        <a-image src="#figCorner" width="0.94" height="0.548" position="0 -0.255 0.002" material="shader: flat"></a-image>
+          <a-entity class="page" id="page3" visible="false">
+          <a-text value="Where I have worked" align="left" anchor="left" color="#C08B45" width="0.62" position="-0.50 0.215 0.002"></a-text>
+          <a-plane width="0.368" height="0.128" position="-0.31 0.128 0.0015" color="#C08B45" material="shader: flat"></a-plane>
+          <a-image src="#logoBER" width="0.36" height="0.12" position="-0.31 0.128 0.002" material="shader: flat"></a-image>
+          <a-text value="Bearcats Electric Racing" align="left" anchor="left" color="#F2F0EA" width="0.56" position="-0.10 0.152 0.002"></a-text>
+          <a-text value="Vehicle Control Lead, 2026" align="left" anchor="left" color="#8B9096" width="0.52" position="-0.10 0.112 0.002"></a-text>
+          <a-plane width="0.011" height="0.011" position="-0.495 0.040 0.002" color="#C08B45" material="shader: flat"></a-plane>
+          <a-text value="HV System Co-Lead, 2025" align="left" anchor="left" color="#F2F0EA" width="0.86" position="-0.468 0.040 0.002"></a-text>
+          <a-plane width="0.011" height="0.011" position="-0.495 -0.010 0.002" color="#C08B45" material="shader: flat"></a-plane>
+          <a-text value="Sensory Robotics - robotics intern" align="left" anchor="left" color="#F2F0EA" width="0.86" position="-0.468 -0.010 0.002"></a-text>
+          <a-plane width="0.011" height="0.011" position="-0.495 -0.060 0.002" color="#C08B45" material="shader: flat"></a-plane>
+          <a-text value="FFE Inc. - electrical intern" align="left" anchor="left" color="#F2F0EA" width="0.86" position="-0.468 -0.060 0.002"></a-text>
+          <a-plane width="0.011" height="0.011" position="-0.495 -0.110 0.002" color="#C08B45" material="shader: flat"></a-plane>
+          <a-text value="1819 Makerspace" align="left" anchor="left" color="#F2F0EA" width="0.86" position="-0.468 -0.110 0.002"></a-text>
+          <a-text value="Team: 16th overall, FSAE" align="left" anchor="left" color="#8B9096" width="0.56" position="-0.50 -0.180 0.002"></a-text>
+          </a-entity>
       </a-entity>
     </a-entity>
 
@@ -288,7 +332,7 @@
   // The panel hinges on one edge of the card. 'angle' is the dihedral angle
   // between the card surface and the panel: 180 = flat, 90 = perpendicular.
   const CARD_HALF_W = 0.51, CARD_HALF_H = 0.286;   // card is 1 x 0.571
-  const PANEL_HALF_W = 0.55, PANEL_HALF_H = 0.52;
+  const PANEL_HALF_W = 0.55, PANEL_HALF_H = 0.37;
 
   const cfg = Object.assign(
     { place: 'top', angle: 125, gap: 0.02, scale: 1,
@@ -343,6 +387,22 @@
     localStorage.setItem('arCardLayout', JSON.stringify(cfg));
   }
 
+  // ---- panel paging ----------------------------------------------------
+  const PAGE_TITLES = ['SKILLS', 'NOW', 'PROJECTS', 'EXPERIENCE'];
+  let page = 0;
+
+  function setPage(i) {
+    const pages = document.querySelectorAll('.page');
+    if (!pages.length) return;
+    page = (i + pages.length) % pages.length;
+    pages.forEach((el, n) => el.setAttribute('visible', n === page));
+    const title = document.getElementById('pageTitle');
+    if (title) title.setAttribute('text', 'value', PAGE_TITLES[page]);
+    const dots = document.getElementById('dots');
+    if (dots) dots.innerHTML = PAGE_TITLES.map((_, n) =>
+      '<i class="' + (n === page ? 'on' : '') + '"></i>').join('');
+  }
+
   const scene   = document.querySelector('a-scene');
   const landing = document.getElementById('landing');
   const scanHint= document.getElementById('scan');
@@ -354,6 +414,20 @@
   const hits    = Array.from(document.querySelectorAll('.hit'));
 
   window.__cardVisible = false;
+
+  const navEl = document.getElementById('nav');
+  document.getElementById('pgUp').addEventListener('click', () => setPage(page - 1));
+  document.getElementById('pgDn').addEventListener('click', () => setPage(page + 1));
+
+  // swipe up / down anywhere on the view also turns the page
+  let touchY = null;
+  document.addEventListener('touchstart', e => { touchY = e.touches[0].clientY; }, { passive: true });
+  document.addEventListener('touchend', e => {
+    if (touchY === null) return;
+    const dy = e.changedTouches[0].clientY - touchY;
+    if (Math.abs(dy) > 70) setPage(page + (dy < 0 ? 1 : -1));
+    touchY = null;
+  }, { passive: true });
 
   // tuner wiring
   const gear = document.getElementById('gear');
@@ -427,6 +501,20 @@
   target.addEventListener('targetLost', () => {
     window.__cardVisible = false;
 
+  const navEl = document.getElementById('nav');
+  document.getElementById('pgUp').addEventListener('click', () => setPage(page - 1));
+  document.getElementById('pgDn').addEventListener('click', () => setPage(page + 1));
+
+  // swipe up / down anywhere on the view also turns the page
+  let touchY = null;
+  document.addEventListener('touchstart', e => { touchY = e.touches[0].clientY; }, { passive: true });
+  document.addEventListener('touchend', e => {
+    if (touchY === null) return;
+    const dy = e.changedTouches[0].clientY - touchY;
+    if (Math.abs(dy) > 70) setPage(page + (dy < 0 ? 1 : -1));
+    touchY = null;
+  }, { passive: true });
+
   // tuner wiring
   const gear = document.getElementById('gear');
   const tune = document.getElementById('tune');
@@ -492,6 +580,8 @@
     scanHint.style.display = 'block';
     backBtn.style.display = 'block';
     gear.style.display = 'block';
+    navEl.style.display = 'flex';
+    setPage(0);
     const start = async () => {
       try { await scene.systems['mindar-image-system'].start(); }
       catch (err) { scanHint.innerHTML = '<span>Could not start: ' + (err && err.message ? err.message : err) + '</span>'; }
@@ -502,6 +592,20 @@
   backBtn.addEventListener('click', () => {
     scene.systems['mindar-image-system'].stop();
     window.__cardVisible = false;
+
+  const navEl = document.getElementById('nav');
+  document.getElementById('pgUp').addEventListener('click', () => setPage(page - 1));
+  document.getElementById('pgDn').addEventListener('click', () => setPage(page + 1));
+
+  // swipe up / down anywhere on the view also turns the page
+  let touchY = null;
+  document.addEventListener('touchstart', e => { touchY = e.touches[0].clientY; }, { passive: true });
+  document.addEventListener('touchend', e => {
+    if (touchY === null) return;
+    const dy = e.changedTouches[0].clientY - touchY;
+    if (Math.abs(dy) > 70) setPage(page + (dy < 0 ? 1 : -1));
+    touchY = null;
+  }, { passive: true });
 
   // tuner wiring
   const gear = document.getElementById('gear');
@@ -558,6 +662,7 @@
     scanHint.style.display = 'none';
     backBtn.style.display = 'none';
     gear.style.display = 'none';
+    navEl.style.display = 'none';
     tune.style.display = 'none';
     hits.forEach(h => h.style.display = 'none');
   });
