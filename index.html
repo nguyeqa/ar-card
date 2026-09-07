@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;800&family=JetBrains+Mono:wght@300;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/aframe@1.5.0/dist/aframe-master.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/aframe-extras@7.5.4/dist/aframe-extras.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 <style>
   :root{ --carbon:#0B0C0E; --bone:#F2F0EA; --red:#CF142B; --bronze:#C08B45; --slate:#8B9096; }
@@ -115,6 +116,15 @@
   <input type="range" id="tGap" min="0" max="30" step="1" value="2">
   <label>Size <span class="val" id="vScale">1.00</span></label>
   <input type="range" id="tScale" min="50" max="150" step="5" value="100">
+  <label style="color:#8B9096">Avatar</label>
+  <label>Across <span class="val" id="vAx">0.30</span></label>
+  <input type="range" id="tAx" min="-80" max="80" step="2" value="30">
+  <label>Up <span class="val" id="vAy">-0.02</span></label>
+  <input type="range" id="tAy" min="-40" max="60" step="2" value="-2">
+  <label>Size <span class="val" id="vAs">0.28</span></label>
+  <input type="range" id="tAs" min="5" max="70" step="1" value="28">
+  <label>Turn <span class="val" id="vAr">-20&deg;</span></label>
+  <input type="range" id="tAr" min="-180" max="180" step="5" value="-20">
   <code id="tOut"></code>
 </div>
 
@@ -135,6 +145,7 @@
     <img id="icLinkedin" src="./assets/icon-linkedin.png?v=3">
     <img id="icGithub"   src="./assets/icon-github.png?v=3">
     <img id="icEmail"    src="./assets/icon-email.png?v=3">
+    <img id="logoBER"    src="./assets/logo-ber.png?v=1">
   </a-assets>
 
   <a-entity light="type: ambient; intensity: 0.75"></a-entity>
@@ -155,29 +166,60 @@
       <a-plane width="0.006" height="0.588" position="-0.507 0 0" color="#C08B45" material="shader: flat"></a-plane>
     </a-entity>
 
-    <!-- greeting panel, hinged along the card's top edge like a laptop lid.
+    <!-- greeting + skills + where-I-work panel, hinged along the card's top edge.
          rotation x sets the opening:  dihedral angle = 180 - rotation.x
          30 -> 150 deg (leaning back)   55 -> 125 deg   80 -> 100 deg (nearly upright) -->
     <a-entity id="screen" position="0 0.305 0.008" rotation="55 0 0" scale="0.001 0.001 0.001">
-      <a-entity id="screenPanel" position="0 0.235 0">
-        <a-plane width="1.06" height="0.44" color="#0B0C0E" opacity="0.93" material="shader: flat; side: double"></a-plane>
-        <a-plane width="1.06" height="0.005" position="0  0.2205 0.001" color="#C08B45" material="shader: flat"></a-plane>
-        <a-plane width="1.06" height="0.005" position="0 -0.2205 0.001" color="#C08B45" material="shader: flat"></a-plane>
+      <a-entity id="screenPanel" position="0 0.365 0">
+        <a-plane width="1.10" height="0.70" color="#0B0C0E" opacity="0.93" material="shader: flat; side: double"></a-plane>
+        <a-plane width="1.10" height="0.005" position="0  0.3505 0.001" color="#C08B45" material="shader: flat"></a-plane>
+        <a-plane width="1.10" height="0.005" position="0 -0.3505 0.001" color="#C08B45" material="shader: flat"></a-plane>
 
         <a-text value="Hi, I'm Quan" align="left" anchor="left" color="#F2F0EA"
-                width="0.80" position="-0.48 0.132 0.002"></a-text>
-        <a-text value="Vehicle control engineer" align="left" anchor="left" color="#F2F0EA"
-                width="0.95" position="-0.48 0.055 0.002"></a-text>
-        <a-plane width="0.96" height="0.002" position="0 0.012 0.002" color="#2A2E34" material="shader: flat"></a-plane>
+                width="0.70" position="-0.50 0.292 0.002"></a-text>
+        <a-text value="Vehicle control engineer" align="left" anchor="left" color="#8B9096"
+                width="0.80" position="-0.50 0.236 0.002"></a-text>
+        <a-plane width="1.00" height="0.002" position="0 0.202 0.002" color="#2A2E34" material="shader: flat"></a-plane>
 
-        <a-text value="Bearcats Electric Racing" align="left" anchor="left" color="#C08B45"
-                width="0.88" position="-0.48 -0.038 0.002"></a-text>
-        <a-text value="Sensory Robotics intern" align="left" anchor="left" color="#8B9096"
-                width="0.88" position="-0.48 -0.093 0.002"></a-text>
-        <a-text value="Tap the icons to connect" align="left" anchor="left" color="#8B9096"
-                width="0.68" position="-0.48 -0.163 0.002"></a-text>
+        <!-- left column -->
+        <a-text value="EMBEDDED" align="left" anchor="left" color="#C08B45" width="0.30" position="-0.50 0.162 0.002"></a-text>
+        <a-text value="C / C++ firmware"   align="left" anchor="left" color="#F2F0EA" width="0.52" position="-0.50 0.112 0.002"></a-text>
+        <a-text value="Simulink / Coder"   align="left" anchor="left" color="#F2F0EA" width="0.52" position="-0.50 0.068 0.002"></a-text>
+        <a-text value="CAN bus / DBC"      align="left" anchor="left" color="#F2F0EA" width="0.52" position="-0.50 0.024 0.002"></a-text>
+        <a-text value="BMS / high voltage" align="left" anchor="left" color="#F2F0EA" width="0.52" position="-0.50 -0.020 0.002"></a-text>
+
+        <!-- right column -->
+        <a-text value="CONTROLS" align="left" anchor="left" color="#C08B45" width="0.30" position="0.02 0.162 0.002"></a-text>
+        <a-text value="FOC / SVPWM"      align="left" anchor="left" color="#F2F0EA" width="0.52" position="0.02 0.112 0.002"></a-text>
+        <a-text value="Torque vectoring" align="left" anchor="left" color="#F2F0EA" width="0.52" position="0.02 0.068 0.002"></a-text>
+        <a-text value="Traction control" align="left" anchor="left" color="#F2F0EA" width="0.52" position="0.02 0.024 0.002"></a-text>
+        <a-text value="Lap time sim"     align="left" anchor="left" color="#F2F0EA" width="0.52" position="0.02 -0.020 0.002"></a-text>
+
+        <!-- tools row -->
+        <a-text value="TOOLS" align="left" anchor="left" color="#C08B45" width="0.22" position="-0.50 -0.072 0.002"></a-text>
+        <a-text value="MATLAB / Python"  align="left" anchor="left" color="#F2F0EA" width="0.52" position="-0.50 -0.122 0.002"></a-text>
+        <a-text value="ROS 2 / OpenCV"   align="left" anchor="left" color="#F2F0EA" width="0.52" position="0.02 -0.122 0.002"></a-text>
+        <a-text value="Linux / Git"      align="left" anchor="left" color="#F2F0EA" width="0.52" position="-0.50 -0.166 0.002"></a-text>
+        <a-text value="Raspberry Pi DAQ" align="left" anchor="left" color="#F2F0EA" width="0.52" position="0.02 -0.166 0.002"></a-text>
+
+        <a-plane width="1.00" height="0.002" position="0 -0.202 0.002" color="#2A2E34" material="shader: flat"></a-plane>
+
+        <!-- where I work: badge left, caption right, aligned to the columns above -->
+        <a-text value="WHERE" align="left" anchor="left" color="#C08B45" width="0.22" position="-0.50 -0.232 0.002"></a-text>
+        <a-image src="#logoBER" width="0.42" height="0.14" position="-0.29 -0.295 0.002" material="shader: flat"></a-image>
+        <a-plane width="0.428" height="0.148" position="-0.29 -0.295 0.0015" color="#C08B45" material="shader: flat"></a-plane>
+        <a-text value="Bearcats Electric Racing" align="left" anchor="left" color="#F2F0EA"
+                width="0.62" position="-0.05 -0.268 0.002"></a-text>
+        <a-text value="Vehicle Control Lead" align="left" anchor="left" color="#8B9096"
+                width="0.54" position="-0.05 -0.318 0.002"></a-text>
       </a-entity>
     </a-entity>
+
+    <!-- 3D avatar. Drop a rigged, animated avatar.glb into assets/ and it appears here.
+         Position it with the tuner; nothing shows until the file loads. -->
+    <a-gltf-model id="avatar" src="./assets/avatar.glb" visible="false"
+                  animation-mixer="clip: *; loop: repeat; crossFadeDuration: 0.3"
+                  position="0.30 -0.02 0.16" rotation="0 -20 0" scale="0.28 0.28 0.28"></a-gltf-model>
 
     <!-- floating tokens: bronze rim, dark face, glyph on both sides -->
     <a-entity id="tokens">
@@ -251,10 +293,11 @@
   // The panel hinges on one edge of the card. 'angle' is the dihedral angle
   // between the card surface and the panel: 180 = flat, 90 = perpendicular.
   const CARD_HALF_W = 0.51, CARD_HALF_H = 0.286;   // card is 1 x 0.571
-  const PANEL_HALF_W = 0.53, PANEL_HALF_H = 0.22;
+  const PANEL_HALF_W = 0.55, PANEL_HALF_H = 0.365;
 
   const cfg = Object.assign(
-    { place: 'top', angle: 125, gap: 0.02, scale: 1 },
+    { place: 'top', angle: 125, gap: 0.02, scale: 1,
+      ax: 0.30, ay: -0.02, as: 0.28, ar: -20 },
     JSON.parse(localStorage.getItem('arCardLayout') || '{}')
   );
 
@@ -289,11 +332,19 @@
     panelEl.setAttribute('position', offset.join(' '));
     panelEl.setAttribute('scale', s + ' ' + s + ' ' + s);
 
+    const av = document.getElementById('avatar');
+    if (av) {
+      av.setAttribute('position', cfg.ax + ' ' + cfg.ay + ' 0.16');
+      av.setAttribute('scale', cfg.as + ' ' + cfg.as + ' ' + cfg.as);
+      av.setAttribute('rotation', '0 ' + cfg.ar + ' 0');
+    }
+
     const out = document.getElementById('tOut');
     if (out) out.textContent =
       'position="' + hinge.map(n => +n.toFixed(3)).join(' ') + '"\n' +
       'rotation="' + rot.map(n => +n.toFixed(1)).join(' ') + '"\n' +
-      'panel offset="' + offset.map(n => +n.toFixed(3)).join(' ') + '"';
+      'panel offset="' + offset.map(n => +n.toFixed(3)).join(' ') + '"\n' +
+      'avatar pos="' + cfg.ax + ' ' + cfg.ay + ' 0.16" scale="' + cfg.as + '" turn="' + cfg.ar + '"';
     localStorage.setItem('arCardLayout', JSON.stringify(cfg));
   }
 
@@ -340,6 +391,24 @@
     document.getElementById('vScale').textContent = cfg.scale.toFixed(2);
     applyLayout();
   });
+  [['tAx','vAx','ax',100,2],['tAy','vAy','ay',100,2],
+   ['tAs','vAs','as',100,2],['tAr','vAr','ar',1,0]].forEach(([id, out, key, div, dp]) => {
+    const el = document.getElementById(id);
+    el.value = Math.round(cfg[key] * div);
+    document.getElementById(out).textContent = dp ? cfg[key].toFixed(dp) : cfg[key] + '\u00B0';
+    el.addEventListener('input', e => {
+      cfg[key] = div === 1 ? +e.target.value : +e.target.value / div;
+      document.getElementById(out).textContent = dp ? cfg[key].toFixed(dp) : cfg[key] + '\u00B0';
+      applyLayout();
+    });
+  });
+
+  // only reveal the avatar once its file has actually loaded
+  const avatarEl = document.getElementById('avatar');
+  avatarEl.addEventListener('model-loaded', () => {
+    if (window.__cardVisible) avatarEl.setAttribute('visible', true);
+  });
+
   scene.addEventListener('loaded', applyLayout);
 
   function grow(el, delay) {
@@ -356,6 +425,7 @@
     clip.currentTime = 0;
     clip.play().catch(() => {});
     grow(screenPanel, 0);
+    if (avatarEl.getObject3D('mesh')) avatarEl.setAttribute('visible', true);
     tokens.forEach((t, i) => grow(t, 120 + i * 110));   // staggered pop-in
   });
 
@@ -393,10 +463,29 @@
     document.getElementById('vScale').textContent = cfg.scale.toFixed(2);
     applyLayout();
   });
+  [['tAx','vAx','ax',100,2],['tAy','vAy','ay',100,2],
+   ['tAs','vAs','as',100,2],['tAr','vAr','ar',1,0]].forEach(([id, out, key, div, dp]) => {
+    const el = document.getElementById(id);
+    el.value = Math.round(cfg[key] * div);
+    document.getElementById(out).textContent = dp ? cfg[key].toFixed(dp) : cfg[key] + '\u00B0';
+    el.addEventListener('input', e => {
+      cfg[key] = div === 1 ? +e.target.value : +e.target.value / div;
+      document.getElementById(out).textContent = dp ? cfg[key].toFixed(dp) : cfg[key] + '\u00B0';
+      applyLayout();
+    });
+  });
+
+  // only reveal the avatar once its file has actually loaded
+  const avatarEl = document.getElementById('avatar');
+  avatarEl.addEventListener('model-loaded', () => {
+    if (window.__cardVisible) avatarEl.setAttribute('visible', true);
+  });
+
   scene.addEventListener('loaded', applyLayout);
     scanHint.style.display = 'block';
     clip.pause();
     shrink(screenPanel);
+    avatarEl.setAttribute('visible', false);
     tokens.forEach(shrink);
     hits.forEach(h => h.style.display = 'none');
   });
@@ -450,6 +539,24 @@
     document.getElementById('vScale').textContent = cfg.scale.toFixed(2);
     applyLayout();
   });
+  [['tAx','vAx','ax',100,2],['tAy','vAy','ay',100,2],
+   ['tAs','vAs','as',100,2],['tAr','vAr','ar',1,0]].forEach(([id, out, key, div, dp]) => {
+    const el = document.getElementById(id);
+    el.value = Math.round(cfg[key] * div);
+    document.getElementById(out).textContent = dp ? cfg[key].toFixed(dp) : cfg[key] + '\u00B0';
+    el.addEventListener('input', e => {
+      cfg[key] = div === 1 ? +e.target.value : +e.target.value / div;
+      document.getElementById(out).textContent = dp ? cfg[key].toFixed(dp) : cfg[key] + '\u00B0';
+      applyLayout();
+    });
+  });
+
+  // only reveal the avatar once its file has actually loaded
+  const avatarEl = document.getElementById('avatar');
+  avatarEl.addEventListener('model-loaded', () => {
+    if (window.__cardVisible) avatarEl.setAttribute('visible', true);
+  });
+
   scene.addEventListener('loaded', applyLayout);
     landing.style.display = 'flex';
     document.body.classList.remove('ar-running');
