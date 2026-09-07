@@ -308,6 +308,13 @@ const Doc = (function () {
       ops.push({ t: 'text', text, font: '400 28px ' + F, color: BONE, x: PAD_X + 26, y });
     };
     const rule = () => { y += 28; ops.push({ t: 'rule', y }); };
+    const figure = (img, w, dy) => {                       // centred image with a bronze edge
+      if (!img) return;
+      const h = w / (img.width / img.height);
+      y += dy;
+      ops.push({ t: 'img', img, x: (W - w) / 2, y, w, h });
+      y += h;
+    };
     const para = (text, font, color, dy, lh) => {          // wraps to the panel width
       y += dy;
       dctx.font = font;
@@ -336,17 +343,34 @@ const Doc = (function () {
          '400 27px ' + F, BONE, 40, 36);
     rule();
 
-    label('NOW');
-    line('Bearcats Electric Racing', '600 32px ' + F, BONE, 46);
-    line('Vehicle Control Lead', '400 27px ' + F, SLATE, 38);
-    line('Torque vectoring - RWD dual motors', '600 29px ' + F, BRONZE, 50);
-    line('Stability through corner entry', '400 28px ' + F, BONE, 38);
-    if (imgs.corner) {
-      const w = W - PAD_X * 2, h = w / (imgs.corner.width / imgs.corner.height);
-      y += 24;
-      ops.push({ t: 'img', img: imgs.corner, x: PAD_X, y, w, h });
-      y += h;
-    }
+    label('BEARCATS ELECTRIC RACING');
+    line('Formula-style electric race car', '400 26px ' + F, SLATE, 42);
+    line('2025 - 2026', '600 26px ' + F, BONE, 38);
+
+    line('2026 - Vehicle Control Lead', '600 30px ' + F, BRONZE, 56);
+    para('Programmed the RCM-112 ECU and implemented torque vectoring control for vehicle '
+       + 'stability through cornering.', '400 27px ' + F, BONE, 44, 36);
+    figure(imgs.corner, W - PAD_X * 2, 26);
+    para('Laid out the CAN architecture and the communications system of the car, keeping '
+       + 'bus load under 75% with no dropped messages.', '400 27px ' + F, BONE, 46, 36);
+    figure(imgs.can, 470, 26);
+
+    line('2025 - HV System Co-Lead', '600 30px ' + F, BRONZE, 62);
+    para('Built a sledge that lets the accumulator slide into the chassis, making installation '
+       + 'a one-person job.', '400 27px ' + F, BONE, 44, 36);
+    figure(imgs.sledge, W - PAD_X * 2, 26);
+    line('Team: 16th overall, FSAE', '400 25px ' + F, SLATE, 46);
+    rule();
+
+    label('CO-OP');
+    line('Sensory Robotics', '600 28px ' + F, BONE, 46);
+    para('Robotics engineering intern - perception pipeline for a SICK time-of-flight camera '
+       + 'on a MiR600 mobile robot, in Python and ROS 2.', '400 26px ' + F, SLATE, 38, 34);
+    line('FFE Inc.', '600 28px ' + F, BONE, 48);
+    para('Electrical intern - hands-on hardware and software in the electrical industry.',
+         '400 26px ' + F, SLATE, 38, 34);
+    line('1819 Makerspace', '600 28px ' + F, BONE, 48);
+    para('Prototyping, fabrication and shop support.', '400 26px ' + F, SLATE, 38, 34);
     rule();
 
     label('SKILLS');
@@ -367,25 +391,8 @@ const Doc = (function () {
     bullet('Traction control + TV models');
     bullet('BMS firmware on Teensy');
     bullet('ToF perception, SICK + ROS 2');
-    rule();
-
-    label('EXPERIENCE');
-    if (imgs.ber) {
-      y += 22;
-      const w = 300, h = w / (imgs.ber.width / imgs.ber.height);
-      ops.push({ t: 'img', img: imgs.ber, x: PAD_X, y, w, h });
-      ops.push({ t: 'text', text: 'Bearcats Electric Racing', font: '600 26px ' + F,
-                 color: BONE, x: PAD_X + w + 24, y: y + 36 });
-      ops.push({ t: 'text', text: 'Vehicle Control Lead, 2026', font: '400 24px ' + F,
-                 color: SLATE, x: PAD_X + w + 24, y: y + 72 });
-      y += h;
-    }
-    bullet('HV System Co-Lead, 2025');
-    bullet('Sensory Robotics - robotics intern');
-    bullet('FFE Inc. - electrical intern');
-    bullet('1819 Makerspace');
-    line('Team: 16th overall, FSAE', '400 25px ' + F, SLATE, 48);
-    line('nguyeqa@mail.uc.edu', '400 25px ' + F, BRONZE, 42);
+    line('github.com/nguyeqa', '400 25px ' + F, SLATE, 48);
+    line('nguyeqa@mail.uc.edu', '400 25px ' + F, BRONZE, 40);
 
     y += 90;
     docH = Math.ceil(y);
@@ -425,7 +432,9 @@ const Doc = (function () {
 
   Promise.all([
     load('corner', './assets/diagram-corner.png?v=1'),
-    load('ber', './assets/logo-ber.png?v=1')
+    load('ber', './assets/logo-ber.png?v=1'),
+    load('can', './assets/diagram-can.png?v=1'),
+    load('sledge', './assets/photo-sledge.png?v=1')
   ]).then(() => { build(); holdUntil = performance.now() + START_DELAY; });
   requestAnimationFrame(frame);
 
