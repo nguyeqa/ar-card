@@ -52,15 +52,12 @@
     background:rgba(11,12,14,.72); border:1px solid #2A2E34; border-radius:3px;
     color:var(--bone); font-family:inherit; font-size:11px; letter-spacing:.12em;
     text-transform:uppercase; padding:9px 12px; }
-  a-scene{ position:fixed; top:0; left:0; width:100%; height:100%; }
-  a-scene .a-canvas{ background:transparent; }
-
-  /* invisible tap targets that ride on top of the 3D tokens */
   #gear{ position:fixed; top:14px; right:14px; z-index:17; display:none;
     background:rgba(11,12,14,.72); border:1px solid #2A2E34; border-radius:3px; color:var(--bone);
     font-family:inherit; font-size:15px; padding:8px 11px; }
   #tune{ position:fixed; right:12px; top:58px; z-index:18; display:none; width:214px;
-    background:rgba(11,12,14,.94); border:1px solid #2A2E34; border-radius:5px; padding:12px; }
+    background:rgba(11,12,14,.94); border:1px solid #2A2E34; border-radius:5px; padding:12px;
+    max-height:72vh; overflow:auto; }
   #tune label{ display:block; font-size:9px; letter-spacing:.14em; text-transform:uppercase;
     color:var(--bronze); margin:9px 0 4px; }
   #tune label:first-child{ margin-top:0; }
@@ -69,19 +66,14 @@
     border-radius:3px; padding:6px; font-family:inherit; font-size:11px; }
   #tune .val{ float:right; color:var(--bone); letter-spacing:0; }
   #tune code{ display:block; margin-top:10px; padding:7px; background:#15181D; border-radius:3px;
-    font-size:9px; line-height:1.5; color:var(--slate); word-break:break-all; }
+    font-size:9px; line-height:1.5; color:var(--slate); word-break:break-all; white-space:pre-wrap; }
 
-  #nav{ position:fixed; right:12px; top:50%; transform:translateY(-50%); z-index:16; display:none;
-    flex-direction:column; align-items:center; gap:9px; }
-  #nav button{ width:40px; height:40px; border-radius:50%; background:rgba(11,12,14,.72);
-    border:1px solid #2A2E34; color:var(--bone); font-size:16px; font-family:inherit; }
-  #nav button:active{ background:var(--bone); color:var(--carbon); }
-  #dots{ display:flex; flex-direction:column; gap:6px; }
-  #dots i{ width:6px; height:6px; border-radius:50%; background:#3A3F46; display:block; }
-  #dots i.on{ background:var(--bronze); }
-
+  /* invisible tap targets that ride on top of the 3D tokens */
   .hit{ position:fixed; top:0; left:0; width:82px; height:82px; margin:-41px 0 0 -41px;
     border-radius:50%; z-index:16; display:none; }
+
+  a-scene{ position:fixed; top:0; left:0; width:100%; height:100%; }
+  a-scene .a-canvas{ background:transparent; }
 </style>
 </head>
 <body>
@@ -108,14 +100,9 @@
 </div>
 
 <button id="back">&larr; Back</button>
+<button id="gear">&#9881;</button>
 <div id="scan"><span>Point at the card &middot; hold steady</span></div>
 
-<button id="gear">&#9881;</button>
-<div id="nav">
-  <button id="pgUp">&#9650;</button>
-  <div id="dots"></div>
-  <button id="pgDn">&#9660;</button>
-</div>
 <div id="tune">
   <label>Placement</label>
   <select id="tPlace">
@@ -130,6 +117,8 @@
   <input type="range" id="tGap" min="0" max="30" step="1" value="2">
   <label>Size <span class="val" id="vScale">1.00</span></label>
   <input type="range" id="tScale" min="50" max="150" step="5" value="100">
+  <label>Scroll speed <span class="val" id="vSpeed">42</span></label>
+  <input type="range" id="tSpeed" min="0" max="120" step="2" value="42">
   <label style="color:#8B9096">Avatar</label>
   <label>Across <span class="val" id="vAx">0.30</span></label>
   <input type="range" id="tAx" min="-80" max="80" step="2" value="30">
@@ -142,7 +131,6 @@
   <code id="tOut"></code>
 </div>
 
-<!-- these sit exactly over the 3D tokens; invisible, but they are what you actually tap -->
 <a class="hit" id="hitLinkedin" href="https://www.linkedin.com/in/quan-nguyenuc/" target="_blank" rel="noopener" aria-label="LinkedIn"></a>
 <a class="hit" id="hitGithub"   href="https://github.com/nguyeqa" target="_blank" rel="noopener" aria-label="GitHub"></a>
 <a class="hit" id="hitEmail"    href="mailto:nguyeqa@mail.uc.edu" aria-label="Email"></a>
@@ -159,8 +147,7 @@
     <img id="icLinkedin" src="./assets/icon-linkedin.png?v=3">
     <img id="icGithub"   src="./assets/icon-github.png?v=3">
     <img id="icEmail"    src="./assets/icon-email.png?v=3">
-    <img id="logoBER"    src="./assets/logo-ber.png?v=1">
-    <img id="figCorner" src="./assets/diagram-corner.png?v=1">
+    <canvas id="docCanvas" width="800" height="538"></canvas>
   </a-assets>
 
   <a-entity light="type: ambient; intensity: 0.75"></a-entity>
@@ -181,90 +168,24 @@
       <a-plane width="0.006" height="0.588" position="-0.507 0 0" color="#C08B45" material="shader: flat"></a-plane>
     </a-entity>
 
-    <!-- paged panel, hinged along the card's top edge.
-         rotation x sets the opening:  dihedral angle = 180 - rotation.x -->
+    <!-- scrolling panel, hinged on the card's top edge.
+         dihedral angle between card and panel = 180 - rotation.x -->
     <a-entity id="screen" position="0 0.305 0.008" rotation="55 0 0" scale="0.001 0.001 0.001">
       <a-entity id="screenPanel" position="0 0.37 0">
-        <a-plane width="1.10" height="0.74" color="#0B0C0E" opacity="0.93" material="shader: flat; side: double"></a-plane>
-        <a-plane width="1.10" height="0.005" position="0  0.3705 0.001" color="#C08B45" material="shader: flat"></a-plane>
-        <a-plane width="1.10" height="0.005" position="0 -0.3705 0.001" color="#C08B45" material="shader: flat"></a-plane>
-
-        <!-- fixed header -->
-          <a-text value="Hi, I'm Quan" align="left" anchor="left" color="#F2F0EA" width="0.62" position="-0.50 0.305 0.002"></a-text>
-          <a-text id="pageTitle" value="SKILLS" align="right" anchor="right" color="#C08B45" width="0.34" position="0.50 0.305 0.002"></a-text>
-          <a-plane width="1.00" height="0.002" position="0 0.272 0.002" color="#2A2E34" material="shader: flat"></a-plane>
-
-          <a-entity class="page" id="page0">
-          <a-text value="EMBEDDED" align="left" anchor="left" color="#C08B45" width="0.30" position="-0.50 0.215 0.002"></a-text>
-          <a-text value="C / C++ firmware" align="left" anchor="left" color="#F2F0EA" width="0.52" position="-0.50 0.165 0.002"></a-text>
-          <a-text value="Simulink / Coder" align="left" anchor="left" color="#F2F0EA" width="0.52" position="-0.50 0.121 0.002"></a-text>
-          <a-text value="CAN bus / DBC" align="left" anchor="left" color="#F2F0EA" width="0.52" position="-0.50 0.077 0.002"></a-text>
-          <a-text value="BMS / high voltage" align="left" anchor="left" color="#F2F0EA" width="0.52" position="-0.50 0.033 0.002"></a-text>
-          <a-text value="CONTROLS" align="left" anchor="left" color="#C08B45" width="0.30" position="0.02 0.215 0.002"></a-text>
-          <a-text value="FOC / SVPWM" align="left" anchor="left" color="#F2F0EA" width="0.52" position="0.02 0.165 0.002"></a-text>
-          <a-text value="Torque vectoring" align="left" anchor="left" color="#F2F0EA" width="0.52" position="0.02 0.121 0.002"></a-text>
-          <a-text value="Traction control" align="left" anchor="left" color="#F2F0EA" width="0.52" position="0.02 0.077 0.002"></a-text>
-          <a-text value="Lap time sim" align="left" anchor="left" color="#F2F0EA" width="0.52" position="0.02 0.033 0.002"></a-text>
-          <a-text value="TOOLS" align="left" anchor="left" color="#C08B45" width="0.22" position="-0.50 -0.025 0.002"></a-text>
-          <a-text value="MATLAB / Python / Linux" align="left" anchor="left" color="#F2F0EA" width="0.52" position="-0.50 -0.075 0.002"></a-text>
-          <a-text value="ROS 2 / OpenCV / Git" align="left" anchor="left" color="#F2F0EA" width="0.52" position="0.02 -0.075 0.002"></a-text>
-          <a-text value="Vietnamese / German" align="left" anchor="left" color="#8B9096" width="0.50" position="-0.50 -0.145 0.002"></a-text>
-          </a-entity>
-
-          <a-entity class="page" id="page1" visible="false">
-          <a-text value="Torque vectoring - RWD dual motors" align="left" anchor="left" color="#C08B45" width="0.98" position="-0.50 0.222 0.002"></a-text>
-          <a-text value="Stability through corner entry" align="left" anchor="left" color="#F2F0EA" width="0.90" position="-0.50 0.186 0.002"></a-text>
-          <a-plane width="0.908" height="0.528" position="0 -0.100 0.0015" color="#C08B45" material="shader: flat"></a-plane>
-          <a-image src="#figCorner" width="0.90" height="0.520" position="0 -0.100 0.002" material="shader: flat"></a-image>
-          </a-entity>
-
-          <a-entity class="page" id="page2" visible="false">
-          <a-text value="What I build" align="left" anchor="left" color="#C08B45" width="0.46" position="-0.50 0.215 0.002"></a-text>
-          <a-plane width="0.011" height="0.011" position="-0.495 0.155 0.002" color="#C08B45" material="shader: flat"></a-plane>
-          <a-text value="EV4 ECU - Simulink to flash" align="left" anchor="left" color="#F2F0EA" width="0.86" position="-0.468 0.155 0.002"></a-text>
-          <a-plane width="0.011" height="0.011" position="-0.495 0.105 0.002" color="#C08B45" material="shader: flat"></a-plane>
-          <a-text value="CAN telemetry to the pit wall" align="left" anchor="left" color="#F2F0EA" width="0.86" position="-0.468 0.105 0.002"></a-text>
-          <a-plane width="0.011" height="0.011" position="-0.495 0.055 0.002" color="#C08B45" material="shader: flat"></a-plane>
-          <a-text value="Lap time sim in MATLAB" align="left" anchor="left" color="#F2F0EA" width="0.86" position="-0.468 0.055 0.002"></a-text>
-          <a-plane width="0.011" height="0.011" position="-0.495 0.005 0.002" color="#C08B45" material="shader: flat"></a-plane>
-          <a-text value="Traction control + TV models" align="left" anchor="left" color="#F2F0EA" width="0.86" position="-0.468 0.005 0.002"></a-text>
-          <a-plane width="0.011" height="0.011" position="-0.495 -0.045 0.002" color="#C08B45" material="shader: flat"></a-plane>
-          <a-text value="BMS firmware on Teensy" align="left" anchor="left" color="#F2F0EA" width="0.86" position="-0.468 -0.045 0.002"></a-text>
-          <a-plane width="0.011" height="0.011" position="-0.495 -0.095 0.002" color="#C08B45" material="shader: flat"></a-plane>
-          <a-text value="ToF perception, SICK + ROS 2" align="left" anchor="left" color="#F2F0EA" width="0.86" position="-0.468 -0.095 0.002"></a-text>
-          <a-text value="github.com/nguyeqa" align="left" anchor="left" color="#8B9096" width="0.52" position="-0.50 -0.165 0.002"></a-text>
-          </a-entity>
-
-          <a-entity class="page" id="page3" visible="false">
-          <a-text value="Where I have worked" align="left" anchor="left" color="#C08B45" width="0.62" position="-0.50 0.215 0.002"></a-text>
-          <a-plane width="0.368" height="0.128" position="-0.31 0.128 0.0015" color="#C08B45" material="shader: flat"></a-plane>
-          <a-image src="#logoBER" width="0.36" height="0.12" position="-0.31 0.128 0.002" material="shader: flat"></a-image>
-          <a-text value="Bearcats Electric Racing" align="left" anchor="left" color="#F2F0EA" width="0.56" position="-0.10 0.152 0.002"></a-text>
-          <a-text value="Vehicle Control Lead, 2026" align="left" anchor="left" color="#8B9096" width="0.52" position="-0.10 0.112 0.002"></a-text>
-          <a-plane width="0.011" height="0.011" position="-0.495 0.040 0.002" color="#C08B45" material="shader: flat"></a-plane>
-          <a-text value="HV System Co-Lead, 2025" align="left" anchor="left" color="#F2F0EA" width="0.86" position="-0.468 0.040 0.002"></a-text>
-          <a-plane width="0.011" height="0.011" position="-0.495 -0.010 0.002" color="#C08B45" material="shader: flat"></a-plane>
-          <a-text value="Sensory Robotics - robotics intern" align="left" anchor="left" color="#F2F0EA" width="0.86" position="-0.468 -0.010 0.002"></a-text>
-          <a-plane width="0.011" height="0.011" position="-0.495 -0.060 0.002" color="#C08B45" material="shader: flat"></a-plane>
-          <a-text value="FFE Inc. - electrical intern" align="left" anchor="left" color="#F2F0EA" width="0.86" position="-0.468 -0.060 0.002"></a-text>
-          <a-plane width="0.011" height="0.011" position="-0.495 -0.110 0.002" color="#C08B45" material="shader: flat"></a-plane>
-          <a-text value="1819 Makerspace" align="left" anchor="left" color="#F2F0EA" width="0.86" position="-0.468 -0.110 0.002"></a-text>
-          <a-text value="Team: 16th overall, FSAE" align="left" anchor="left" color="#8B9096" width="0.56" position="-0.50 -0.180 0.002"></a-text>
-          </a-entity>
+        <a-plane width="1.114" height="0.754" color="#C08B45" material="shader: flat"></a-plane>
+        <a-plane id="docPlane" width="1.10" height="0.74" position="0 0 0.002"
+                 material="shader: flat; src: #docCanvas" scroll-doc></a-plane>
       </a-entity>
     </a-entity>
 
-    <!-- 3D avatar. Drop a rigged, animated avatar.glb into assets/ and it appears here.
-         Position it with the tuner; nothing shows until the file loads. -->
+    <!-- 3D avatar. Drop a rigged, animated avatar.glb into assets/ and it appears here. -->
     <a-gltf-model id="avatar" src="./assets/avatar.glb" visible="false"
                   animation-mixer="clip: *; loop: repeat; crossFadeDuration: 0.3"
                   position="0.30 -0.02 0.16" rotation="0 -20 0" scale="0.28 0.28 0.28"></a-gltf-model>
 
     <!-- floating tokens: bronze rim, dark face, glyph on both sides -->
     <a-entity id="tokens">
-
-      <a-entity class="token" position="-0.31 -0.42 0.10" scale="0.001 0.001 0.001"
-                hit-anchor="selector: #hitLinkedin">
+      <a-entity class="token" position="-0.31 -0.42 0.10" scale="0.001 0.001 0.001" hit-anchor="selector: #hitLinkedin">
         <a-entity animation__bob="property: position; from: 0 0 0; to: 0 0.022 0; dir: alternate; loop: true; dur: 1900; easing: easeInOutSine"
                   animation__tilt="property: rotation; from: 0 -17 0; to: 0 17 0; dir: alternate; loop: true; dur: 2700; easing: easeInOutSine">
           <a-cylinder radius="0.092" height="0.016" rotation="90 0 0" color="#C08B45" metalness="0.55" roughness="0.35"></a-cylinder>
@@ -276,8 +197,7 @@
         <a-text value="LINKEDIN" align="center" anchor="center" color="#F2F0EA" width="0.62" position="0 -0.135 0"></a-text>
       </a-entity>
 
-      <a-entity class="token" position="0 -0.42 0.10" scale="0.001 0.001 0.001"
-                hit-anchor="selector: #hitGithub">
+      <a-entity class="token" position="0 -0.42 0.10" scale="0.001 0.001 0.001" hit-anchor="selector: #hitGithub">
         <a-entity animation__bob="property: position; from: 0 0 0; to: 0 0.022 0; dir: alternate; loop: true; dur: 1900; delay: 240; easing: easeInOutSine"
                   animation__tilt="property: rotation; from: 0 -17 0; to: 0 17 0; dir: alternate; loop: true; dur: 2700; delay: 240; easing: easeInOutSine">
           <a-cylinder radius="0.092" height="0.016" rotation="90 0 0" color="#C08B45" metalness="0.55" roughness="0.35"></a-cylinder>
@@ -289,8 +209,7 @@
         <a-text value="GITHUB" align="center" anchor="center" color="#F2F0EA" width="0.62" position="0 -0.135 0"></a-text>
       </a-entity>
 
-      <a-entity class="token" position="0.31 -0.42 0.10" scale="0.001 0.001 0.001"
-                hit-anchor="selector: #hitEmail">
+      <a-entity class="token" position="0.31 -0.42 0.10" scale="0.001 0.001 0.001" hit-anchor="selector: #hitEmail">
         <a-entity animation__bob="property: position; from: 0 0 0; to: 0 0.022 0; dir: alternate; loop: true; dur: 1900; delay: 480; easing: easeInOutSine"
                   animation__tilt="property: rotation; from: 0 -17 0; to: 0 17 0; dir: alternate; loop: true; dur: 2700; delay: 480; easing: easeInOutSine">
           <a-cylinder radius="0.092" height="0.016" rotation="90 0 0" color="#C08B45" metalness="0.55" roughness="0.35"></a-cylinder>
@@ -301,398 +220,353 @@
         </a-entity>
         <a-text value="EMAIL" align="center" anchor="center" color="#F2F0EA" width="0.62" position="0 -0.135 0"></a-text>
       </a-entity>
-
     </a-entity>
+
   </a-entity>
 </a-scene>
 
 <script>
-  // keeps an invisible DOM link glued to a 3D object's position on screen
-  AFRAME.registerComponent('hit-anchor', {
-    schema: { selector: { type: 'string' } },
-    init: function () {
-      this.v = new THREE.Vector3();
-      this.anchor = document.querySelector(this.data.selector);
-    },
-    tick: function () {
-      if (!this.anchor) return;
-      const cam = this.el.sceneEl.camera;
-      if (!cam || !window.__cardVisible) { this.anchor.style.display = 'none'; return; }
-      this.el.object3D.getWorldPosition(this.v);
-      this.v.project(cam);
-      if (this.v.z > 1) { this.anchor.style.display = 'none'; return; }
-      const x = (this.v.x * 0.5 + 0.5) * window.innerWidth;
-      const y = (-this.v.y * 0.5 + 0.5) * window.innerHeight;
-      this.anchor.style.display = 'block';
-      this.anchor.style.transform = 'translate(' + x + 'px,' + y + 'px)';
-    }
-  });
-
-  // ---- panel placement -------------------------------------------------
-  // The panel hinges on one edge of the card. 'angle' is the dihedral angle
-  // between the card surface and the panel: 180 = flat, 90 = perpendicular.
-  const CARD_HALF_W = 0.51, CARD_HALF_H = 0.286;   // card is 1 x 0.571
-  const PANEL_HALF_W = 0.55, PANEL_HALF_H = 0.37;
-
-  const cfg = Object.assign(
-    { place: 'top', angle: 125, gap: 0.02, scale: 1,
-      ax: 0.30, ay: -0.02, as: 0.28, ar: -20 },
-    JSON.parse(localStorage.getItem('arCardLayout') || '{}')
-  );
-
-  function applyLayout() {
-    const screenEl = document.getElementById('screen');
-    const panelEl  = document.getElementById('screenPanel');
-    if (!screenEl || !panelEl) return;
-    const tilt = 180 - cfg.angle;                       // rotation away from the card plane
-    const s = cfg.scale;
-    let hinge, rot, offset;
-
-    if (cfg.place === 'top') {
-      hinge  = [0, CARD_HALF_H + cfg.gap, 0.008];
-      rot    = [tilt, 0, 0];
-      offset = [0, PANEL_HALF_H * s, 0];
-    } else if (cfg.place === 'bottom') {
-      hinge  = [0, -(CARD_HALF_H + cfg.gap), 0.008];
-      rot    = [-tilt, 0, 0];
-      offset = [0, -PANEL_HALF_H * s, 0];
-    } else if (cfg.place === 'left') {
-      hinge  = [-(CARD_HALF_W + cfg.gap), 0, 0.008];
-      rot    = [0, tilt, 0];
-      offset = [-PANEL_HALF_W * s, 0, 0];
-    } else {
-      hinge  = [CARD_HALF_W + cfg.gap, 0, 0.008];
-      rot    = [0, -tilt, 0];
-      offset = [PANEL_HALF_W * s, 0, 0];
-    }
-
-    screenEl.setAttribute('position', hinge.join(' '));
-    screenEl.setAttribute('rotation', rot.join(' '));
-    panelEl.setAttribute('position', offset.join(' '));
-    panelEl.setAttribute('scale', s + ' ' + s + ' ' + s);
-
-    const av = document.getElementById('avatar');
-    if (av) {
-      av.setAttribute('position', cfg.ax + ' ' + cfg.ay + ' 0.16');
-      av.setAttribute('scale', cfg.as + ' ' + cfg.as + ' ' + cfg.as);
-      av.setAttribute('rotation', '0 ' + cfg.ar + ' 0');
-    }
-
-    const out = document.getElementById('tOut');
-    if (out) out.textContent =
-      'position="' + hinge.map(n => +n.toFixed(3)).join(' ') + '"\n' +
-      'rotation="' + rot.map(n => +n.toFixed(1)).join(' ') + '"\n' +
-      'panel offset="' + offset.map(n => +n.toFixed(3)).join(' ') + '"\n' +
-      'avatar pos="' + cfg.ax + ' ' + cfg.ay + ' 0.16" scale="' + cfg.as + '" turn="' + cfg.ar + '"';
-    localStorage.setItem('arCardLayout', JSON.stringify(cfg));
-  }
-
-  // ---- panel paging ----------------------------------------------------
-  const PAGE_TITLES = ['SKILLS', 'NOW', 'PROJECTS', 'EXPERIENCE'];
-  let page = 0;
-
-  const PAGE_MS = 6000;          // how long each page stays up
-  let pageTimer = null;
-
-  function setPage(i) {
-    const pages = document.querySelectorAll('.page');
-    if (!pages.length) return;
-    page = (i + pages.length) % pages.length;
-    pages.forEach((el, n) => {
-      const on = (n === page);
-      el.setAttribute('visible', on);
-      if (on) {                                   // slide the new page up as it appears
-        el.setAttribute('position', '0 -0.055 0');
-        el.setAttribute('animation__slide',
-          'property: position; to: 0 0 0; dur: 320; easing: easeOutCubic');
+// ======================================================================
+// components
+// ======================================================================
+AFRAME.registerComponent('scroll-doc', {
+  init: function () {
+    this.el.addEventListener('materialtextureloaded', () => {
+      const m = this.el.getObject3D('mesh');
+      if (m && m.material.map) {
+        m.material.map.generateMipmaps = false;
+        m.material.map.minFilter = THREE.LinearFilter;
+        m.material.map.magFilter = THREE.LinearFilter;
       }
     });
-    const title = document.getElementById('pageTitle');
-    if (title) title.setAttribute('text', 'value', PAGE_TITLES[page]);
-    const dots = document.getElementById('dots');
-    if (dots) dots.innerHTML = PAGE_TITLES.map((_, n) =>
-      '<i class="' + (n === page ? 'on' : '') + '"></i>').join('');
   }
+});
 
-  // pages advance on their own; any manual input restarts the clock
-  function startPaging(reset) {
-    stopPaging();
-    if (reset) setPage(0);
-    pageTimer = setInterval(() => {
-      if (window.__cardVisible) setPage(page + 1);
-    }, PAGE_MS);
+// keeps an invisible DOM link glued to a 3D object's position on screen
+AFRAME.registerComponent('hit-anchor', {
+  schema: { selector: { type: 'string' } },
+  init: function () {
+    this.v = new THREE.Vector3();
+    this.anchor = document.querySelector(this.data.selector);
+  },
+  tick: function () {
+    if (!this.anchor) return;
+    const cam = this.el.sceneEl.camera;
+    if (!cam || !window.__cardVisible) { this.anchor.style.display = 'none'; return; }
+    this.el.object3D.getWorldPosition(this.v);
+    this.v.project(cam);
+    if (this.v.z > 1) { this.anchor.style.display = 'none'; return; }
+    const x = (this.v.x * 0.5 + 0.5) * window.innerWidth;
+    const y = (-this.v.y * 0.5 + 0.5) * window.innerHeight;
+    this.anchor.style.display = 'block';
+    this.anchor.style.transform = 'translate(' + x + 'px,' + y + 'px)';
   }
-  function stopPaging() {
-    if (pageTimer) { clearInterval(pageTimer); pageTimer = null; }
-  }
-  function nudge(delta) { setPage(page + delta); startPaging(false); }
+});
 
-  const scene   = document.querySelector('a-scene');
-  const landing = document.getElementById('landing');
-  const scanHint= document.getElementById('scan');
-  const backBtn = document.getElementById('back');
-  const target  = document.getElementById('target');
-  const clip    = document.getElementById('clip');
-  const screenPanel = document.getElementById('screen');
-  const tokens  = Array.from(document.querySelectorAll('.token'));
-  const hits    = Array.from(document.querySelectorAll('.hit'));
+// ======================================================================
+// the scrolling document
+//   Everything is drawn once into a tall offscreen canvas. A window onto
+//   it scrolls continuously and wraps, so content loops smoothly and can
+//   never spill outside the panel.
+// ======================================================================
+const Doc = (function () {
+  const W = 800, VIEW_H = 538, PAD_X = 44;
+  const BRONZE = '#C08B45', BONE = '#F2F0EA', SLATE = '#8B9096', CARBON = '#0B0C0E';
+  const F = '-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif';
 
-  window.__cardVisible = false;
+  const view = document.getElementById('docCanvas');
+  const vctx = view.getContext('2d');
+  const doc = document.createElement('canvas');
+  doc.width = W;
+  const dctx = doc.getContext('2d');
 
-  const navEl = document.getElementById('nav');
-  document.getElementById('pgUp').addEventListener('click', () => nudge(-1));
-  document.getElementById('pgDn').addEventListener('click', () => nudge(1));
+  const imgs = {};
+  const START_DELAY = 3000;          // hold at the top this long before scrolling
+  let ready = false, offset = 0, last = performance.now(), docH = 1, speed = 42;
+  let holdUntil = 0;
 
-  // swipe up / down anywhere on the view also turns the page
-  let touchY = null;
-  document.addEventListener('touchstart', e => { touchY = e.touches[0].clientY; }, { passive: true });
-  document.addEventListener('touchend', e => {
-    if (touchY === null) return;
-    const dy = e.changedTouches[0].clientY - touchY;
-    if (Math.abs(dy) > 70) nudge(dy < 0 ? 1 : -1);
-    touchY = null;
-  }, { passive: true });
-
-  // tuner wiring
-  const gear = document.getElementById('gear');
-  const tune = document.getElementById('tune');
-  const tPlace = document.getElementById('tPlace'), tAngle = document.getElementById('tAngle');
-  const tGap   = document.getElementById('tGap'),   tScale = document.getElementById('tScale');
-
-  tPlace.value = cfg.place; tAngle.value = cfg.angle;
-  tGap.value = Math.round(cfg.gap * 100); tScale.value = Math.round(cfg.scale * 100);
-  document.getElementById('vAngle').textContent = cfg.angle + '\u00B0';
-  document.getElementById('vGap').textContent = cfg.gap.toFixed(2);
-  document.getElementById('vScale').textContent = cfg.scale.toFixed(2);
-
-  gear.addEventListener('click', () => {
-    tune.style.display = tune.style.display === 'block' ? 'none' : 'block';
-  });
-  tPlace.addEventListener('change', e => { cfg.place = e.target.value; applyLayout(); });
-  tAngle.addEventListener('input', e => {
-    cfg.angle = +e.target.value;
-    document.getElementById('vAngle').textContent = cfg.angle + '\u00B0';
-    applyLayout();
-  });
-  tGap.addEventListener('input', e => {
-    cfg.gap = +e.target.value / 100;
-    document.getElementById('vGap').textContent = cfg.gap.toFixed(2);
-    applyLayout();
-  });
-  tScale.addEventListener('input', e => {
-    cfg.scale = +e.target.value / 100;
-    document.getElementById('vScale').textContent = cfg.scale.toFixed(2);
-    applyLayout();
-  });
-  [['tAx','vAx','ax',100,2],['tAy','vAy','ay',100,2],
-   ['tAs','vAs','as',100,2],['tAr','vAr','ar',1,0]].forEach(([id, out, key, div, dp]) => {
-    const el = document.getElementById(id);
-    el.value = Math.round(cfg[key] * div);
-    document.getElementById(out).textContent = dp ? cfg[key].toFixed(dp) : cfg[key] + '\u00B0';
-    el.addEventListener('input', e => {
-      cfg[key] = div === 1 ? +e.target.value : +e.target.value / div;
-      document.getElementById(out).textContent = dp ? cfg[key].toFixed(dp) : cfg[key] + '\u00B0';
-      applyLayout();
+  function load(name, src) {
+    return new Promise(res => {
+      const i = new Image();
+      i.onload = () => { imgs[name] = i; res(); };
+      i.onerror = () => res();
+      i.src = src;
     });
-  });
-
-  // only reveal the avatar once its file has actually loaded
-  const avatarEl = document.getElementById('avatar');
-  avatarEl.addEventListener('model-loaded', () => {
-    if (window.__cardVisible) avatarEl.setAttribute('visible', true);
-  });
-
-  scene.addEventListener('loaded', applyLayout);
-
-  function grow(el, delay) {
-    el.setAttribute('animation__pop',
-      'property: scale; to: 1 1 1; dur: 380; delay: ' + (delay || 0) + '; easing: easeOutBack');
-  }
-  function shrink(el) {
-    el.setAttribute('animation__pop', 'property: scale; to: 0.001 0.001 0.001; dur: 150; easing: easeInQuad');
   }
 
-  target.addEventListener('targetFound', () => {
-    window.__cardVisible = true;
-    scanHint.style.display = 'none';
-    clip.currentTime = 0;
-    clip.play().catch(() => {});
-    grow(screenPanel, 0);
-    if (avatarEl.getObject3D('mesh')) avatarEl.setAttribute('visible', true);
-    tokens.forEach((t, i) => grow(t, 120 + i * 110));   // staggered pop-in
-    startPaging(true);                                  // restart the carousel from page 1
-  });
-
-  target.addEventListener('targetLost', () => {
-    window.__cardVisible = false;
-
-  const navEl = document.getElementById('nav');
-  document.getElementById('pgUp').addEventListener('click', () => nudge(-1));
-  document.getElementById('pgDn').addEventListener('click', () => nudge(1));
-
-  // swipe up / down anywhere on the view also turns the page
-  let touchY = null;
-  document.addEventListener('touchstart', e => { touchY = e.touches[0].clientY; }, { passive: true });
-  document.addEventListener('touchend', e => {
-    if (touchY === null) return;
-    const dy = e.changedTouches[0].clientY - touchY;
-    if (Math.abs(dy) > 70) nudge(dy < 0 ? 1 : -1);
-    touchY = null;
-  }, { passive: true });
-
-  // tuner wiring
-  const gear = document.getElementById('gear');
-  const tune = document.getElementById('tune');
-  const tPlace = document.getElementById('tPlace'), tAngle = document.getElementById('tAngle');
-  const tGap   = document.getElementById('tGap'),   tScale = document.getElementById('tScale');
-
-  tPlace.value = cfg.place; tAngle.value = cfg.angle;
-  tGap.value = Math.round(cfg.gap * 100); tScale.value = Math.round(cfg.scale * 100);
-  document.getElementById('vAngle').textContent = cfg.angle + '\u00B0';
-  document.getElementById('vGap').textContent = cfg.gap.toFixed(2);
-  document.getElementById('vScale').textContent = cfg.scale.toFixed(2);
-
-  gear.addEventListener('click', () => {
-    tune.style.display = tune.style.display === 'block' ? 'none' : 'block';
-  });
-  tPlace.addEventListener('change', e => { cfg.place = e.target.value; applyLayout(); });
-  tAngle.addEventListener('input', e => {
-    cfg.angle = +e.target.value;
-    document.getElementById('vAngle').textContent = cfg.angle + '\u00B0';
-    applyLayout();
-  });
-  tGap.addEventListener('input', e => {
-    cfg.gap = +e.target.value / 100;
-    document.getElementById('vGap').textContent = cfg.gap.toFixed(2);
-    applyLayout();
-  });
-  tScale.addEventListener('input', e => {
-    cfg.scale = +e.target.value / 100;
-    document.getElementById('vScale').textContent = cfg.scale.toFixed(2);
-    applyLayout();
-  });
-  [['tAx','vAx','ax',100,2],['tAy','vAy','ay',100,2],
-   ['tAs','vAs','as',100,2],['tAr','vAr','ar',1,0]].forEach(([id, out, key, div, dp]) => {
-    const el = document.getElementById(id);
-    el.value = Math.round(cfg[key] * div);
-    document.getElementById(out).textContent = dp ? cfg[key].toFixed(dp) : cfg[key] + '\u00B0';
-    el.addEventListener('input', e => {
-      cfg[key] = div === 1 ? +e.target.value : +e.target.value / div;
-      document.getElementById(out).textContent = dp ? cfg[key].toFixed(dp) : cfg[key] + '\u00B0';
-      applyLayout();
-    });
-  });
-
-  // only reveal the avatar once its file has actually loaded
-  const avatarEl = document.getElementById('avatar');
-  avatarEl.addEventListener('model-loaded', () => {
-    if (window.__cardVisible) avatarEl.setAttribute('visible', true);
-  });
-
-  scene.addEventListener('loaded', applyLayout);
-    scanHint.style.display = 'block';
-    clip.pause();
-    shrink(screenPanel);
-    avatarEl.setAttribute('visible', false);
-    tokens.forEach(shrink);
-    hits.forEach(h => h.style.display = 'none');
-  });
-
-  document.getElementById('start').addEventListener('click', async () => {
-    try { await clip.play(); clip.pause(); } catch (e) {}
-    landing.style.display = 'none';
-    document.body.classList.add('ar-running');
-    scanHint.style.display = 'block';
-    backBtn.style.display = 'block';
-    gear.style.display = 'block';
-    navEl.style.display = 'flex';
-    setPage(0);
-    startPaging(true);
-    const start = async () => {
-      try { await scene.systems['mindar-image-system'].start(); }
-      catch (err) { scanHint.innerHTML = '<span>Could not start: ' + (err && err.message ? err.message : err) + '</span>'; }
+  function build() {
+    const ops = [];
+    let y = 0;
+    const line = (text, font, color, dy, x) => {
+      y += dy;
+      ops.push({ t: 'text', text, font, color, x: x === undefined ? PAD_X : x, y });
     };
-    if (scene.hasLoaded) start(); else scene.addEventListener('loaded', start);
-  });
+    const label = text => line(text, '600 22px ' + F, BRONZE, 48);
+    const bullet = text => {
+      y += 40;
+      ops.push({ t: 'dot', x: PAD_X + 4, y: y - 9 });
+      ops.push({ t: 'text', text, font: '400 28px ' + F, color: BONE, x: PAD_X + 26, y });
+    };
+    const rule = () => { y += 28; ops.push({ t: 'rule', y }); };
 
-  backBtn.addEventListener('click', () => {
-    scene.systems['mindar-image-system'].stop();
-    window.__cardVisible = false;
+    line("Hi, I'm Quan", '700 52px ' + F, BONE, 76);
+    line('Vehicle control engineer', '400 30px ' + F, SLATE, 44);
+    rule();
 
-  const navEl = document.getElementById('nav');
-  document.getElementById('pgUp').addEventListener('click', () => nudge(-1));
-  document.getElementById('pgDn').addEventListener('click', () => nudge(1));
+    label('NOW');
+    line('Bearcats Electric Racing', '600 32px ' + F, BONE, 46);
+    line('Vehicle Control Lead', '400 27px ' + F, SLATE, 38);
+    line('Torque vectoring - RWD dual motors', '600 29px ' + F, BRONZE, 50);
+    line('Stability through corner entry', '400 28px ' + F, BONE, 38);
+    if (imgs.corner) {
+      const w = W - PAD_X * 2, h = w / (imgs.corner.width / imgs.corner.height);
+      y += 24;
+      ops.push({ t: 'img', img: imgs.corner, x: PAD_X, y, w, h });
+      y += h;
+    }
+    rule();
 
-  // swipe up / down anywhere on the view also turns the page
-  let touchY = null;
-  document.addEventListener('touchstart', e => { touchY = e.touches[0].clientY; }, { passive: true });
-  document.addEventListener('touchend', e => {
-    if (touchY === null) return;
-    const dy = e.changedTouches[0].clientY - touchY;
-    if (Math.abs(dy) > 70) nudge(dy < 0 ? 1 : -1);
-    touchY = null;
-  }, { passive: true });
+    label('SKILLS');
+    line('Embedded', '600 26px ' + F, BONE, 44);
+    line('C / C++ firmware, Simulink, Embedded Coder', '400 26px ' + F, BONE, 36);
+    line('CAN bus + DBC, BMS, high voltage', '400 26px ' + F, BONE, 36);
+    line('Controls', '600 26px ' + F, BONE, 46);
+    line('FOC / SVPWM, torque vectoring', '400 26px ' + F, BONE, 36);
+    line('Traction control, lap time simulation', '400 26px ' + F, BONE, 36);
+    line('Tools', '600 26px ' + F, BONE, 46);
+    line('MATLAB, Python, ROS 2, OpenCV, Linux, Git', '400 26px ' + F, BONE, 36);
+    rule();
 
-  // tuner wiring
-  const gear = document.getElementById('gear');
-  const tune = document.getElementById('tune');
-  const tPlace = document.getElementById('tPlace'), tAngle = document.getElementById('tAngle');
-  const tGap   = document.getElementById('tGap'),   tScale = document.getElementById('tScale');
+    label('PROJECTS');
+    bullet('EV4 ECU - Simulink to flash');
+    bullet('CAN telemetry to the pit wall');
+    bullet('Lap time simulation in MATLAB');
+    bullet('Traction control + TV models');
+    bullet('BMS firmware on Teensy');
+    bullet('ToF perception, SICK + ROS 2');
+    rule();
 
-  tPlace.value = cfg.place; tAngle.value = cfg.angle;
-  tGap.value = Math.round(cfg.gap * 100); tScale.value = Math.round(cfg.scale * 100);
-  document.getElementById('vAngle').textContent = cfg.angle + '\u00B0';
-  document.getElementById('vGap').textContent = cfg.gap.toFixed(2);
-  document.getElementById('vScale').textContent = cfg.scale.toFixed(2);
+    label('EXPERIENCE');
+    if (imgs.ber) {
+      y += 22;
+      const w = 300, h = w / (imgs.ber.width / imgs.ber.height);
+      ops.push({ t: 'img', img: imgs.ber, x: PAD_X, y, w, h });
+      ops.push({ t: 'text', text: 'Bearcats Electric Racing', font: '600 26px ' + F,
+                 color: BONE, x: PAD_X + w + 24, y: y + 36 });
+      ops.push({ t: 'text', text: 'Vehicle Control Lead, 2026', font: '400 24px ' + F,
+                 color: SLATE, x: PAD_X + w + 24, y: y + 72 });
+      y += h;
+    }
+    bullet('HV System Co-Lead, 2025');
+    bullet('Sensory Robotics - robotics intern');
+    bullet('FFE Inc. - electrical intern');
+    bullet('1819 Makerspace');
+    line('Team: 16th overall, FSAE', '400 25px ' + F, SLATE, 48);
+    line('nguyeqa@mail.uc.edu', '400 25px ' + F, BRONZE, 42);
 
-  gear.addEventListener('click', () => {
-    tune.style.display = tune.style.display === 'block' ? 'none' : 'block';
-  });
-  tPlace.addEventListener('change', e => { cfg.place = e.target.value; applyLayout(); });
-  tAngle.addEventListener('input', e => {
-    cfg.angle = +e.target.value;
-    document.getElementById('vAngle').textContent = cfg.angle + '\u00B0';
-    applyLayout();
-  });
-  tGap.addEventListener('input', e => {
-    cfg.gap = +e.target.value / 100;
-    document.getElementById('vGap').textContent = cfg.gap.toFixed(2);
-    applyLayout();
-  });
-  tScale.addEventListener('input', e => {
-    cfg.scale = +e.target.value / 100;
-    document.getElementById('vScale').textContent = cfg.scale.toFixed(2);
-    applyLayout();
-  });
-  [['tAx','vAx','ax',100,2],['tAy','vAy','ay',100,2],
-   ['tAs','vAs','as',100,2],['tAr','vAr','ar',1,0]].forEach(([id, out, key, div, dp]) => {
-    const el = document.getElementById(id);
-    el.value = Math.round(cfg[key] * div);
-    document.getElementById(out).textContent = dp ? cfg[key].toFixed(dp) : cfg[key] + '\u00B0';
-    el.addEventListener('input', e => {
-      cfg[key] = div === 1 ? +e.target.value : +e.target.value / div;
-      document.getElementById(out).textContent = dp ? cfg[key].toFixed(dp) : cfg[key] + '\u00B0';
-      applyLayout();
+    y += 90;
+    docH = Math.ceil(y);
+    doc.height = docH;
+
+    dctx.fillStyle = CARBON;
+    dctx.fillRect(0, 0, W, docH);
+    dctx.textBaseline = 'alphabetic';
+    ops.forEach(o => {
+      if (o.t === 'text') { dctx.font = o.font; dctx.fillStyle = o.color; dctx.fillText(o.text, o.x, o.y); }
+      else if (o.t === 'dot') { dctx.fillStyle = BRONZE; dctx.fillRect(o.x, o.y, 9, 9); }
+      else if (o.t === 'rule') { dctx.fillStyle = '#2A2E34'; dctx.fillRect(PAD_X, o.y, W - PAD_X * 2, 2); }
+      else if (o.t === 'img') {
+        dctx.fillStyle = BRONZE;
+        dctx.fillRect(o.x - 3, o.y - 3, o.w + 6, o.h + 6);
+        dctx.drawImage(o.img, o.x, o.y, o.w, o.h);
+      }
     });
-  });
+    ready = true;
+  }
 
-  // only reveal the avatar once its file has actually loaded
-  const avatarEl = document.getElementById('avatar');
-  avatarEl.addEventListener('model-loaded', () => {
-    if (window.__cardVisible) avatarEl.setAttribute('visible', true);
-  });
+  function frame(now) {
+    const dt = Math.min((now - last) / 1000, 0.1);
+    last = now;
+    if (ready) {
+      if (window.__cardVisible && now >= holdUntil) offset = (offset + speed * dt) % docH;
+      vctx.fillStyle = CARBON;
+      vctx.fillRect(0, 0, W, VIEW_H);
+      vctx.drawImage(doc, 0, -offset);
+      vctx.drawImage(doc, 0, docH - offset);   // second copy makes the wrap seamless
+      const plane = document.getElementById('docPlane');
+      const mesh = plane && plane.getObject3D('mesh');
+      if (mesh && mesh.material.map) mesh.material.map.needsUpdate = true;
+    }
+    requestAnimationFrame(frame);
+  }
 
-  scene.addEventListener('loaded', applyLayout);
-    landing.style.display = 'flex';
-    document.body.classList.remove('ar-running');
-    scanHint.style.display = 'none';
-    backBtn.style.display = 'none';
-    gear.style.display = 'none';
-    navEl.style.display = 'none';
-    tune.style.display = 'none';
-    stopPaging();
-    hits.forEach(h => h.style.display = 'none');
+  Promise.all([
+    load('corner', './assets/diagram-corner.png?v=1'),
+    load('ber', './assets/logo-ber.png?v=1')
+  ]).then(() => { build(); holdUntil = performance.now() + START_DELAY; });
+  requestAnimationFrame(frame);
+
+  return {
+    // back to the top, then pause before it starts moving again
+    reset: () => { offset = 0; holdUntil = performance.now() + START_DELAY; },
+    setSpeed: v => { speed = v; }
+  };
+})();
+
+// ======================================================================
+// panel placement
+//   'angle' is the dihedral angle between card and panel: 180 flat, 90 upright.
+// ======================================================================
+const CARD_HALF_W = 0.51, CARD_HALF_H = 0.286;
+const PANEL_HALF_W = 0.557, PANEL_HALF_H = 0.377;
+
+const cfg = Object.assign(
+  { place: 'top', angle: 125, gap: 0.02, scale: 1, speed: 42,
+    ax: 0.30, ay: -0.02, as: 0.28, ar: -20 },
+  JSON.parse(localStorage.getItem('arCardLayout') || '{}')
+);
+
+function applyLayout() {
+  const screenEl = document.getElementById('screen');
+  const panelEl  = document.getElementById('screenPanel');
+  const tilt = 180 - cfg.angle;
+  const s = cfg.scale;
+  let hinge, rot, offset;
+
+  if (cfg.place === 'top') {
+    hinge = [0, CARD_HALF_H + cfg.gap, 0.008];  rot = [tilt, 0, 0];
+    offset = [0, PANEL_HALF_H * s, 0];
+  } else if (cfg.place === 'bottom') {
+    hinge = [0, -(CARD_HALF_H + cfg.gap), 0.008]; rot = [-tilt, 0, 0];
+    offset = [0, -PANEL_HALF_H * s, 0];
+  } else if (cfg.place === 'left') {
+    hinge = [-(CARD_HALF_W + cfg.gap), 0, 0.008]; rot = [0, tilt, 0];
+    offset = [-PANEL_HALF_W * s, 0, 0];
+  } else {
+    hinge = [CARD_HALF_W + cfg.gap, 0, 0.008];  rot = [0, -tilt, 0];
+    offset = [PANEL_HALF_W * s, 0, 0];
+  }
+
+  screenEl.setAttribute('position', hinge.join(' '));
+  screenEl.setAttribute('rotation', rot.join(' '));
+  panelEl.setAttribute('position', offset.join(' '));
+  panelEl.setAttribute('scale', s + ' ' + s + ' ' + s);
+
+  const av = document.getElementById('avatar');
+  av.setAttribute('position', cfg.ax + ' ' + cfg.ay + ' 0.16');
+  av.setAttribute('scale', cfg.as + ' ' + cfg.as + ' ' + cfg.as);
+  av.setAttribute('rotation', '0 ' + cfg.ar + ' 0');
+
+  Doc.setSpeed(cfg.speed);
+
+  document.getElementById('tOut').textContent =
+    'position="' + hinge.map(n => +n.toFixed(3)).join(' ') + '"\n' +
+    'rotation="' + rot.map(n => +n.toFixed(1)).join(' ') + '"\n' +
+    'scroll speed ' + cfg.speed;
+  localStorage.setItem('arCardLayout', JSON.stringify(cfg));
+}
+
+// ======================================================================
+// wiring
+// ======================================================================
+const scene    = document.querySelector('a-scene');
+const landing  = document.getElementById('landing');
+const scanHint = document.getElementById('scan');
+const backBtn  = document.getElementById('back');
+const gear     = document.getElementById('gear');
+const tune     = document.getElementById('tune');
+const target   = document.getElementById('target');
+const clip     = document.getElementById('clip');
+const screenEl = document.getElementById('screen');
+const avatarEl = document.getElementById('avatar');
+const tokens   = Array.from(document.querySelectorAll('.token'));
+const hits     = Array.from(document.querySelectorAll('.hit'));
+
+window.__cardVisible = false;
+
+function grow(el, delay) {
+  el.setAttribute('animation__pop',
+    'property: scale; to: 1 1 1; dur: 380; delay: ' + (delay || 0) + '; easing: easeOutBack');
+}
+function shrink(el) {
+  el.setAttribute('animation__pop', 'property: scale; to: 0.001 0.001 0.001; dur: 150; easing: easeInQuad');
+}
+
+target.addEventListener('targetFound', () => {
+  window.__cardVisible = true;
+  scanHint.style.display = 'none';
+  clip.currentTime = 0;
+  clip.play().catch(() => {});
+  Doc.reset();
+  grow(screenEl, 0);
+  tokens.forEach((t, i) => grow(t, 120 + i * 110));
+  if (avatarEl.getObject3D('mesh')) avatarEl.setAttribute('visible', true);
+});
+
+target.addEventListener('targetLost', () => {
+  window.__cardVisible = false;
+  scanHint.style.display = 'block';
+  clip.pause();
+  shrink(screenEl);
+  tokens.forEach(shrink);
+  avatarEl.setAttribute('visible', false);
+  hits.forEach(h => h.style.display = 'none');
+});
+
+avatarEl.addEventListener('model-loaded', () => {
+  if (window.__cardVisible) avatarEl.setAttribute('visible', true);
+});
+
+document.getElementById('start').addEventListener('click', async () => {
+  try { await clip.play(); clip.pause(); } catch (e) {}
+  landing.style.display = 'none';
+  document.body.classList.add('ar-running');
+  scanHint.style.display = 'block';
+  backBtn.style.display = 'block';
+  gear.style.display = 'block';
+  const go = async () => {
+    try { await scene.systems['mindar-image-system'].start(); }
+    catch (err) { scanHint.innerHTML = '<span>Could not start: ' + (err && err.message ? err.message : err) + '</span>'; }
+  };
+  if (scene.hasLoaded) go(); else scene.addEventListener('loaded', go);
+});
+
+backBtn.addEventListener('click', () => {
+  scene.systems['mindar-image-system'].stop();
+  window.__cardVisible = false;
+  landing.style.display = 'flex';
+  document.body.classList.remove('ar-running');
+  scanHint.style.display = 'none';
+  backBtn.style.display = 'none';
+  gear.style.display = 'none';
+  tune.style.display = 'none';
+  hits.forEach(h => h.style.display = 'none');
+});
+
+gear.addEventListener('click', () => {
+  tune.style.display = tune.style.display === 'block' ? 'none' : 'block';
+});
+
+// tuner sliders
+document.getElementById('tPlace').value = cfg.place;
+document.getElementById('tPlace').addEventListener('change', e => { cfg.place = e.target.value; applyLayout(); });
+
+[['tAngle','vAngle','angle',1,'deg'], ['tGap','vGap','gap',100,'2dp'],
+ ['tScale','vScale','scale',100,'2dp'], ['tSpeed','vSpeed','speed',1,'int'],
+ ['tAx','vAx','ax',100,'2dp'], ['tAy','vAy','ay',100,'2dp'],
+ ['tAs','vAs','as',100,'2dp'], ['tAr','vAr','ar',1,'deg']].forEach(([id, out, key, div, fmt]) => {
+  const el = document.getElementById(id), lab = document.getElementById(out);
+  const show = v => lab.textContent = fmt === 'deg' ? v + '\u00B0' : (fmt === '2dp' ? v.toFixed(2) : v);
+  el.value = Math.round(cfg[key] * div);
+  show(cfg[key]);
+  el.addEventListener('input', e => {
+    cfg[key] = div === 1 ? +e.target.value : +e.target.value / div;
+    show(cfg[key]);
+    applyLayout();
   });
+});
+
+scene.addEventListener('loaded', applyLayout);
 </script>
 </body>
 </html>
