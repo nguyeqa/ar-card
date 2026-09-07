@@ -356,8 +356,14 @@ const Doc = (function () {
     figure(imgs.can, 470, 26);
 
     line('2025 - HV System Co-Lead', '600 30px ' + F, BRONZE, 62);
+    para('Wrote a MATLAB script to monitor CAN message rates from the BMS, and finalised the '
+       + 'offsets and factors in the DBC file.', '400 27px ' + F, BONE, 44, 36);
+    figure(imgs.bench, W - PAD_X * 2, 26);
+    para('Built a battery simulation in Simulink for the 28s5p pack, giving 517 V under an '
+       + '80 kW load.', '400 27px ' + F, BONE, 46, 36);
+    figure(imgs.packsim, W - PAD_X * 2, 26);
     para('Built a sledge that lets the accumulator slide into the chassis, making installation '
-       + 'a one-person job.', '400 27px ' + F, BONE, 44, 36);
+       + 'a one-person job.', '400 27px ' + F, BONE, 46, 36);
     figure(imgs.sledge, W - PAD_X * 2, 26);
     line('Team: 16th overall, FSAE', '400 25px ' + F, SLATE, 46);
     rule();
@@ -434,7 +440,9 @@ const Doc = (function () {
     load('corner', './assets/diagram-corner.png?v=1'),
     load('ber', './assets/logo-ber.png?v=1'),
     load('can', './assets/diagram-can.png?v=1'),
-    load('sledge', './assets/photo-sledge.png?v=1')
+    load('sledge', './assets/photo-sledge.png?v=1'),
+    load('bench', './assets/photo-canbench.png?v=1'),
+    load('packsim', './assets/diagram-packsim.png?v=1')
   ]).then(() => { build(); holdUntil = performance.now() + START_DELAY; });
   requestAnimationFrame(frame);
 
