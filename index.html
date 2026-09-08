@@ -117,8 +117,8 @@
   <input type="range" id="tGap" min="0" max="30" step="1" value="2">
   <label>Size <span class="val" id="vScale">1.00</span></label>
   <input type="range" id="tScale" min="50" max="150" step="5" value="100">
-  <label>Scroll speed <span class="val" id="vSpeed">42</span></label>
-  <input type="range" id="tSpeed" min="0" max="120" step="2" value="42">
+  <label>Scroll speed <span class="val" id="vSpeed">75</span></label>
+  <input type="range" id="tSpeed" min="0" max="220" step="5" value="75">
   <label style="color:#8B9096">Avatar</label>
   <label>Across <span class="val" id="vAx">0.30</span></label>
   <input type="range" id="tAx" min="-80" max="80" step="2" value="30">
@@ -282,7 +282,8 @@ const Doc = (function () {
 
   const imgs = {};
   const START_DELAY = 3000;          // hold at the top this long before scrolling
-  let ready = false, offset = 0, last = performance.now(), docH = 1, speed = 42;
+  const RESUME_DELAY = 1500;         // after a manual drag, wait this long
+  let ready = false, offset = 0, last = performance.now(), docH = 1, speed = 75;
   let holdUntil = 0;
 
   function load(name, src) {
@@ -449,7 +450,11 @@ const Doc = (function () {
   return {
     // back to the top, then pause before it starts moving again
     reset: () => { offset = 0; holdUntil = performance.now() + START_DELAY; },
-    setSpeed: v => { speed = v; }
+    setSpeed: v => { speed = v; },
+    // manual scroll: shift by dy document pixels, wrapping both ways
+    nudge: dy => { if (ready) offset = ((offset + dy) % docH + docH) % docH; },
+    // freeze while the finger is down, then wait a beat before resuming
+    hold: on => { holdUntil = on ? Infinity : performance.now() + RESUME_DELAY; }
   };
 })();
 
@@ -461,10 +466,11 @@ const CARD_HALF_W = 0.51, CARD_HALF_H = 0.286;
 const PANEL_HALF_W = 0.557, PANEL_HALF_H = 0.377;
 
 const cfg = Object.assign(
-  { place: 'top', angle: 125, gap: 0.02, scale: 1, speed: 42,
+  { v: 2, place: 'top', angle: 125, gap: 0.02, scale: 1, speed: 75,
     ax: 0.30, ay: -0.02, as: 0.28, ar: -20 },
   JSON.parse(localStorage.getItem('arCardLayout') || '{}')
 );
+if (cfg.v !== 2) { cfg.v = 2; cfg.speed = 75; }        // pick up the faster default once
 
 function applyLayout() {
   const screenEl = document.getElementById('screen');
@@ -545,6 +551,24 @@ target.addEventListener('targetFound', () => {
 
 target.addEventListener('targetLost', () => {
   window.__cardVisible = false;
+
+  // drag the panel up or down by hand; auto-scroll picks up again shortly after
+  let drag = null;
+  const IGNORE = 'a, button, input, select, #tune, #landing';
+  window.addEventListener('pointerdown', e => {
+    if (!window.__cardVisible) return;
+    if (e.target.closest && e.target.closest(IGNORE)) { drag = null; return; }
+    drag = { y: e.clientY, moved: false };
+    Doc.hold(true);
+  }, { capture: true });
+  window.addEventListener('pointermove', e => {
+    if (!drag) return;
+    const dy = e.clientY - drag.y;
+    if (Math.abs(dy) > 2) { drag.moved = true; Doc.nudge(-dy * 2.2); drag.y = e.clientY; }
+  }, { capture: true, passive: true });
+  const endDrag = () => { if (drag) { drag = null; Doc.hold(false); } };
+  window.addEventListener('pointerup', endDrag, { capture: true });
+  window.addEventListener('pointercancel', endDrag, { capture: true });
   scanHint.style.display = 'block';
   clip.pause();
   shrink(screenEl);
@@ -574,6 +598,24 @@ document.getElementById('start').addEventListener('click', async () => {
 backBtn.addEventListener('click', () => {
   scene.systems['mindar-image-system'].stop();
   window.__cardVisible = false;
+
+  // drag the panel up or down by hand; auto-scroll picks up again shortly after
+  let drag = null;
+  const IGNORE = 'a, button, input, select, #tune, #landing';
+  window.addEventListener('pointerdown', e => {
+    if (!window.__cardVisible) return;
+    if (e.target.closest && e.target.closest(IGNORE)) { drag = null; return; }
+    drag = { y: e.clientY, moved: false };
+    Doc.hold(true);
+  }, { capture: true });
+  window.addEventListener('pointermove', e => {
+    if (!drag) return;
+    const dy = e.clientY - drag.y;
+    if (Math.abs(dy) > 2) { drag.moved = true; Doc.nudge(-dy * 2.2); drag.y = e.clientY; }
+  }, { capture: true, passive: true });
+  const endDrag = () => { if (drag) { drag = null; Doc.hold(false); } };
+  window.addEventListener('pointerup', endDrag, { capture: true });
+  window.addEventListener('pointercancel', endDrag, { capture: true });
   landing.style.display = 'flex';
   document.body.classList.remove('ar-running');
   scanHint.style.display = 'none';
