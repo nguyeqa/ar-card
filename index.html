@@ -280,6 +280,22 @@ const Doc = (function () {
   doc.width = W;
   const dctx = doc.getContext('2d');
 
+  // one file per skill: swap or extend this list and the grid re-flows on its own
+  const SKILLS = [
+    { key: 'matlab',      name: 'MATLAB' },
+    { key: 'simulink',    name: 'Simulink' },
+    { key: 'c',           name: 'C' },
+    { key: 'cplusplus',   name: 'C++' },
+    { key: 'python',      name: 'Python' },
+    { key: 'altium',      name: 'Altium' },
+    { key: 'ros',         name: 'ROS 2' },
+    { key: 'opencv',      name: 'OpenCV' },
+    { key: 'git',         name: 'Git' },
+    { key: 'linux',       name: 'Linux' },
+    { key: 'raspberrypi', name: 'Raspberry Pi' },
+    { key: 'arduino',     name: 'Arduino' }
+  ];
+
   const imgs = {};
   const START_DELAY = 3000;          // hold at the top this long before scrolling
   const RESUME_DELAY = 1500;         // after a manual drag, wait this long
@@ -380,15 +396,25 @@ const Doc = (function () {
     para('Prototyping, fabrication and shop support.', '400 26px ' + F, SLATE, 38, 34);
     rule();
 
-    label('SKILLS');
-    line('Embedded', '600 26px ' + F, BONE, 44);
-    line('C / C++ firmware, Simulink, Embedded Coder', '400 26px ' + F, BONE, 36);
-    line('CAN bus + DBC, BMS, high voltage', '400 26px ' + F, BONE, 36);
-    line('Controls', '600 26px ' + F, BONE, 46);
+    label('SOFTWARE');
+    {
+      const cols = 4, tile = 92, gapX = (W - PAD_X * 2 - cols * tile) / (cols - 1);
+      const rowH = tile + 46;
+      y += 30;
+      SKILLS.forEach((s, i) => {
+        const img = imgs['sk_' + s.key];
+        const cx = PAD_X + (i % cols) * (tile + gapX);
+        const cy = y + Math.floor(i / cols) * rowH;
+        if (img) ops.push({ t: 'raw', img, x: cx, y: cy, w: tile, h: tile });
+        ops.push({ t: 'ctext', text: s.name, font: '400 21px ' + F, color: BONE,
+                   x: cx + tile / 2, y: cy + tile + 28 });
+      });
+      y += Math.ceil(SKILLS.length / cols) * rowH - 12;
+    }
+    line('Domain', '600 26px ' + F, BONE, 52);
     line('FOC / SVPWM, torque vectoring', '400 26px ' + F, BONE, 36);
     line('Traction control, lap time simulation', '400 26px ' + F, BONE, 36);
-    line('Tools', '600 26px ' + F, BONE, 46);
-    line('MATLAB, Python, ROS 2, OpenCV, Linux, Git', '400 26px ' + F, BONE, 36);
+    line('CAN bus + DBC, BMS, high voltage', '400 26px ' + F, BONE, 36);
     rule();
 
     label('PROJECTS');
@@ -410,8 +436,13 @@ const Doc = (function () {
     dctx.textBaseline = 'alphabetic';
     ops.forEach(o => {
       if (o.t === 'text') { dctx.font = o.font; dctx.fillStyle = o.color; dctx.fillText(o.text, o.x, o.y); }
+      else if (o.t === 'ctext') {
+        dctx.font = o.font; dctx.fillStyle = o.color; dctx.textAlign = 'center';
+        dctx.fillText(o.text, o.x, o.y); dctx.textAlign = 'left';
+      }
       else if (o.t === 'dot') { dctx.fillStyle = BRONZE; dctx.fillRect(o.x, o.y, 9, 9); }
       else if (o.t === 'rule') { dctx.fillStyle = '#2A2E34'; dctx.fillRect(PAD_X, o.y, W - PAD_X * 2, 2); }
+      else if (o.t === 'raw') { dctx.drawImage(o.img, o.x, o.y, o.w, o.h); }
       else if (o.t === 'img') {
         dctx.fillStyle = BRONZE;
         dctx.fillRect(o.x - 3, o.y - 3, o.w + 6, o.h + 6);
@@ -425,11 +456,13 @@ const Doc = (function () {
     const dt = Math.min((now - last) / 1000, 0.1);
     last = now;
     if (ready) {
-      if (window.__cardVisible && now >= holdUntil) offset = (offset + speed * dt) % docH;
+      const maxOffset = Math.max(0, docH - VIEW_H);      // stop at the end, never wrap
+      if (window.__cardVisible && now >= holdUntil) {
+        offset = Math.min(offset + speed * dt, maxOffset);
+      }
       vctx.fillStyle = CARBON;
       vctx.fillRect(0, 0, W, VIEW_H);
       vctx.drawImage(doc, 0, -offset);
-      vctx.drawImage(doc, 0, docH - offset);   // second copy makes the wrap seamless
       const plane = document.getElementById('docPlane');
       const mesh = plane && plane.getObject3D('mesh');
       if (mesh && mesh.material.map) mesh.material.map.needsUpdate = true;
@@ -443,7 +476,8 @@ const Doc = (function () {
     load('can', './assets/diagram-can.png?v=1'),
     load('sledge', './assets/photo-sledge.png?v=1'),
     load('bench', './assets/photo-canbench.png?v=1'),
-    load('packsim', './assets/diagram-packsim.png?v=1')
+    load('packsim', './assets/diagram-packsim.png?v=1'),
+    ...SKILLS.map(s => load('sk_' + s.key, './assets/skill-' + s.key + '.png?v=2'))
   ]).then(() => { build(); holdUntil = performance.now() + START_DELAY; });
   requestAnimationFrame(frame);
 
@@ -451,8 +485,12 @@ const Doc = (function () {
     // back to the top, then pause before it starts moving again
     reset: () => { offset = 0; holdUntil = performance.now() + START_DELAY; },
     setSpeed: v => { speed = v; },
-    // manual scroll: shift by dy document pixels, wrapping both ways
-    nudge: dy => { if (ready) offset = ((offset + dy) % docH + docH) % docH; },
+    // manual scroll: shift by dy document pixels, clamped to the ends
+    nudge: dy => {
+      if (!ready) return;
+      const maxOffset = Math.max(0, docH - VIEW_H);
+      offset = Math.max(0, Math.min(offset + dy, maxOffset));
+    },
     // freeze while the finger is down, then wait a beat before resuming
     hold: on => { holdUntil = on ? Infinity : performance.now() + RESUME_DELAY; }
   };
