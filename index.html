@@ -477,7 +477,7 @@ const Doc = (function () {
     load('sledge', './assets/photo-sledge.png?v=1'),
     load('bench', './assets/photo-canbench.png?v=1'),
     load('packsim', './assets/diagram-packsim.png?v=1'),
-    ...SKILLS.map(s => load('sk_' + s.key, './assets/skill-' + s.key + '.png?v=2'))
+    ...SKILLS.map(s => load('sk_' + s.key, './assets/skill-' + s.key + '.png?v=3'))
   ]).then(() => { build(); holdUntil = performance.now() + START_DELAY; });
   requestAnimationFrame(frame);
 
