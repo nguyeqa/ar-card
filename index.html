@@ -13,17 +13,12 @@
 <style>
   :root{ --carbon:#0B0C0E; --bone:#F2F0EA; --red:#CF142B; --bronze:#C08B45; --slate:#8B9096; }
   *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  html,body{ width:100%; height:100%; background:var(--carbon); color:var(--bone);
+  html{ width:100%; height:100%; background:var(--carbon); }
+  body{ width:100%; height:100%; background:transparent; color:var(--bone);
     font-family:'JetBrains Mono',ui-monospace,monospace; overflow:hidden; }
-  body.ar-running{ background:transparent; }
   a{ color:inherit; text-decoration:none; }
 
   /* ---------- in-AR chrome ---------- */
-  #scan{ position:fixed; left:0; right:0; bottom:30px; z-index:15; text-align:center;
-    font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--bone);
-    text-shadow:0 1px 6px rgba(0,0,0,.8); display:none; }
-  #scan span{ display:inline-block; background:rgba(11,12,14,.72); border:1px solid #2A2E34;
-    border-radius:3px; padding:9px 14px; }
   #reticle{ position:fixed; inset:0; z-index:14; display:flex; flex-direction:column;
     align-items:center; justify-content:center; gap:20px; pointer-events:none;
     transition:opacity .35s; }
@@ -91,7 +86,6 @@
     <a href="mailto:nguyeqa@mail.uc.edu"><img src="./assets/icon-email.png?v=3" alt="">nguyeqa@mail.uc.edu</a>
   </div>
 </div>
-<div id="scan"><span>Point at the card &middot; hold steady</span></div>
 
 <div id="tune">
   <label>Placement</label>
@@ -571,7 +565,6 @@ function applyLayout() {
 // wiring
 // ======================================================================
 const scene    = document.querySelector('a-scene');
-const scanHint = document.getElementById('scan');
 const reticle  = document.getElementById('reticle');
 const tapstart = document.getElementById('tapstart');
 const gear     = document.getElementById('gear');
@@ -595,7 +588,6 @@ function shrink(el) {
 
 target.addEventListener('targetFound', () => {
   window.__cardVisible = true;
-  scanHint.style.display = 'none';
   reticle.classList.add('hide');
   clip.currentTime = 0;
   clip.play().catch(() => {});
@@ -625,7 +617,6 @@ target.addEventListener('targetLost', () => {
   const endDrag = () => { if (drag) { drag = null; Doc.hold(false); } };
   window.addEventListener('pointerup', endDrag, { capture: true });
   window.addEventListener('pointercancel', endDrag, { capture: true });
-  scanHint.style.display = 'block';
   reticle.classList.remove('hide');
   clip.pause();
   shrink(screenEl);
@@ -649,9 +640,7 @@ async function startAR(fromGesture) {
   try {
     await scene.systems['mindar-image-system'].start();
     started = true;
-    document.body.classList.add('ar-running');
-    scanHint.style.display = 'none';
-    gear.style.display = 'block';
+      gear.style.display = 'block';
     tapstart.style.display = 'none';
   } catch (err) {
     const msg = (err && err.name) || '';
@@ -667,6 +656,7 @@ async function startAR(fromGesture) {
 
 const kick = () => startAR(false);
 if (scene.hasLoaded) kick(); else scene.addEventListener('loaded', kick);
+document.addEventListener('DOMContentLoaded', kick);   // whichever fires first
 
 tapstart.addEventListener('click', e => {
   if (e.target.closest('a')) return;            // let the fallback links work
