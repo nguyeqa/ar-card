@@ -288,9 +288,8 @@ const Doc = (function () {
     { key: 'cplusplus',   name: 'C++' },
     { key: 'python',      name: 'Python' },
     { key: 'altium',      name: 'Altium' },
-    { key: 'ros',         name: 'ROS 2' },
-    { key: 'opencv',      name: 'OpenCV' },
-    { key: 'git',         name: 'Git' },
+    { key: 'revit',       name: 'Revit' },
+    { key: 'github',      name: 'GitHub' },
     { key: 'linux',       name: 'Linux' },
     { key: 'raspberrypi', name: 'Raspberry Pi' },
     { key: 'arduino',     name: 'Arduino' }
@@ -477,7 +476,7 @@ const Doc = (function () {
     load('sledge', './assets/photo-sledge.png?v=1'),
     load('bench', './assets/photo-canbench.png?v=1'),
     load('packsim', './assets/diagram-packsim.png?v=1'),
-    ...SKILLS.map(s => load('sk_' + s.key, './assets/skill-' + s.key + '.png?v=4'))
+    ...SKILLS.map(s => load('sk_' + s.key, './assets/skill-' + s.key + '.png?v=6'))
   ]).then(() => { build(); holdUntil = performance.now() + START_DELAY; });
   requestAnimationFrame(frame);
 
