@@ -332,20 +332,37 @@ const Doc = (function () {
       ops.push({ t: 'img', img, x: (W - w) / 2, y, w, h });
       y += h;
     };
-    const para = (text, font, color, dy, lh) => {          // wraps to the panel width
+    // wraps to the panel width. Anything wrapped in *asterisks* is drawn in
+    // bronze, so a phrase can be highlighted inside a normal paragraph.
+    const para = (text, font, color, dy, lh) => {
       y += dy;
-      dctx.font = font;
       const maxW = W - PAD_X * 2;
-      let cur = '';
-      text.split(' ').forEach(word => {
-        const test = cur ? cur + ' ' + word : word;
-        if (dctx.measureText(test).width > maxW && cur) {
-          ops.push({ t: 'text', text: cur, font, color, x: PAD_X, y });
-          y += lh;
-          cur = word;
-        } else { cur = test; }
+      const bold = font.replace(/^\d+/, '600');
+      // split into words, each carrying its own style
+      const words = [];
+      text.split('*').forEach((chunk, i) => {
+        const hot = i % 2 === 1;
+        chunk.split(' ').filter(Boolean).forEach(w =>
+          words.push({ text: w, color: hot ? BRONZE : color, font: hot ? bold : font }));
       });
-      if (cur) ops.push({ t: 'text', text: cur, font, color, x: PAD_X, y });
+      let lineWords = [], lineW = 0;
+      const flush = () => {
+        let x = PAD_X;
+        lineWords.forEach(w => {
+          ops.push({ t: 'text', text: w.text, font: w.font, color: w.color, x, y });
+          dctx.font = w.font;
+          x += dctx.measureText(w.text + ' ').width;
+        });
+        y += lh;
+        lineWords = []; lineW = 0;
+      };
+      words.forEach(w => {
+        dctx.font = w.font;
+        const ww = dctx.measureText(w.text + ' ').width;
+        if (lineW + ww > maxW && lineWords.length) flush();
+        lineWords.push(w); lineW += ww;
+      });
+      if (lineWords.length) { flush(); y -= lh; }
     };
 
     label('INTRODUCTION');
@@ -360,11 +377,11 @@ const Doc = (function () {
          '400 27px ' + F, BONE, 40, 36);
     rule();
 
-    label('BEARCATS ELECTRIC RACING');
-    line('Formula-style electric race car', '400 26px ' + F, SLATE, 42);
-    line('2025 - 2026', '600 26px ' + F, BONE, 38);
+    label('LEADERSHIP');
+    line('Bearcats Electric Racing', '600 30px ' + F, BONE, 46);
+    line('Formula-style electric race car - 2025 to 2026', '400 25px ' + F, SLATE, 36);
 
-    line('2026 - Vehicle Control Lead', '600 30px ' + F, BRONZE, 56);
+    line('Vehicle Control Lead - 2026', '600 26px ' + F, BRONZE, 52);
     para('Programmed the RCM-112 ECU and implemented torque vectoring control for vehicle '
        + 'stability through cornering.', '400 27px ' + F, BONE, 44, 36);
     figure(imgs.corner, W - PAD_X * 2, 26);
@@ -372,7 +389,7 @@ const Doc = (function () {
        + 'bus load under 75% with no dropped messages.', '400 27px ' + F, BONE, 46, 36);
     figure(imgs.can, 470, 26);
 
-    line('2025 - HV System Co-Lead', '600 30px ' + F, BRONZE, 62);
+    line('HV System Co-Lead - 2025', '600 26px ' + F, BRONZE, 58);
     para('Wrote a MATLAB script to monitor CAN message rates from the BMS, and finalised the '
        + 'offsets and factors in the DBC file.', '400 27px ' + F, BONE, 44, 36);
     figure(imgs.bench, W - PAD_X * 2, 26);
@@ -388,9 +405,10 @@ const Doc = (function () {
     label('EXPERIENCE');
     line('FFE Engineering & Architecture', '600 30px ' + F, BONE, 46);
     line('Electrical intern - Aug to Dec 2025', '600 26px ' + F, BRONZE, 38);
-    para('Designed and documented floor plan power and lighting systems for the Ann Arbor and '
-       + 'Cincinnati VA hospital facilities in Autodesk Revit: receptacle layouts, lighting '
-       + 'fixtures, circuiting and panel schedules.', '400 27px ' + F, BONE, 44, 36);
+    para('Designed and documented floor plan power and lighting systems for the '
+       + '*Ann Arbor and Cincinnati VA hospital facilities* in Autodesk Revit: receptacle '
+       + 'layouts, lighting fixtures, circuiting and panel schedules.',
+         '400 27px ' + F, BONE, 44, 36);
     figure(imgs.ffeOffice, W - PAD_X * 2, 26);
     figure(imgs.ffeTeam, W - PAD_X * 2, 22);
 
