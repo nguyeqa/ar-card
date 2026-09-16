@@ -397,9 +397,12 @@ const Doc = (function () {
     figure(imgs.ffeTeam, W - PAD_X * 2, 22);
 
     line('Sensory Robotics', '600 30px ' + F, BONE, 58);
-    line('Robotics engineering intern - 2026', '600 26px ' + F, BRONZE, 38);
-    para('Perception pipeline for a SICK time-of-flight camera on a MiR600 mobile robot, '
-       + 'in Python and ROS 2.', '400 27px ' + F, BONE, 44, 36);
+    line('Robotics engineering intern - May to Aug 2026', '600 26px ' + F, BRONZE, 38);
+    para('Contributed to development of the company\u2019s next-generation autonomous platform '
+       + '*(SR-2)* by integrating a MiR autonomous mobile robot with the existing *(SR-1)* '
+       + 'robotic arm, using ROS 2 for inter-system communication.',
+         '400 27px ' + F, BONE, 44, 36);
+    figure(imgs.sensory, W - PAD_X * 2, 26);
 
     line('1819 Makerspace', '600 30px ' + F, BONE, 58);
     para('Prototyping, fabrication and shop support.', '400 26px ' + F, SLATE, 40, 34);
@@ -488,6 +491,7 @@ const Doc = (function () {
     load('packsim', './assets/diagram-packsim.png?v=1'),
     load('ffeOffice', './assets/photo-ffe-office.png?v=1'),
     load('ffeTeam', './assets/photo-ffe-team.png?v=1'),
+    load('sensory', './assets/photo-sensory.png?v=1'),
     ...SKILLS.map(s => load('sk_' + s.key, './assets/skill-' + s.key + '.png?v=7'))
   ]).then(() => { build(); holdUntil = performance.now() + START_DELAY; });
   requestAnimationFrame(frame);
