@@ -423,21 +423,6 @@ const Doc = (function () {
       });
       y += Math.ceil(SKILLS.length / cols) * rowH - 12;
     }
-    line('Domain', '600 26px ' + F, BONE, 52);
-    line('FOC / SVPWM, torque vectoring', '400 26px ' + F, BONE, 36);
-    line('Traction control, lap time simulation', '400 26px ' + F, BONE, 36);
-    line('CAN bus + DBC, BMS, high voltage', '400 26px ' + F, BONE, 36);
-    rule();
-
-    label('PROJECTS');
-    bullet('EV4 ECU - Simulink to flash');
-    bullet('CAN telemetry to the pit wall');
-    bullet('Lap time simulation in MATLAB');
-    bullet('Traction control + TV models');
-    bullet('BMS firmware on Teensy');
-    bullet('ToF perception, SICK + ROS 2');
-    line('github.com/nguyeqa', '400 25px ' + F, SLATE, 48);
-    line('nguyeqa@mail.uc.edu', '400 25px ' + F, BRONZE, 40);
 
     y += 90;
     docH = Math.ceil(y);
